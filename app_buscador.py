@@ -1,38 +1,39 @@
 import streamlit as st
 import motor_busqueda as motor 
 
-# Configuración de página para móviles
-st.set_page_config(page_title="Radar de Precios", layout="centered")
+# Configuración de página optimizada para móviles
+st.set_page_config(page_title="Radar de Precios Mittelbach", layout="centered")
 
 st.title("🌐 Centro de Mandos: Radar")
 st.markdown("---")
 
-# Contenedor de entrada
+# Bloque de Entrada de Datos
 with st.container():
-    producto = st.text_input("Ingresá el producto:", placeholder="Ej: Resina dental, BTC...")
+    producto = st.text_input("¿Qué buscamos hoy, socio?", placeholder="Ej: Resina dental, BTC, XRP...")
     
     col1, col2 = st.columns(2)
     with col1:
-        boton_disparar = st.button("🚀 Lanzar Radar")
+        boton_disparar = st.button("🚀 Lanzar Radar", use_container_width=True)
     with col2:
-        if st.button("🧹 Nueva Búsqueda"):
+        if st.button("🧹 Limpiar", use_container_width=True):
             st.rerun()
 
+# Lógica de Procesamiento
 if producto:
     p_low = producto.lower()
     
-    # --- ANÁLISIS TÁCTICO (HEURÍSTICA) ---
+    # --- ANÁLISIS TÁCTICO (Heurística Mittelbach) ---
     if any(x in p_low for x in ["btc", "bitcoin", "crypto", "xrp", "eth"]):
-        st.warning("₿ **Activo de Resguardo:** Escaneando válvulas de escape. Revisar liquidez y volatilidad.")
-    elif any(x in p_low for x in ["diente", "dental", "resina", "protesis"]):
-        st.success("🦷 **Insumo Especializado:** Análisis de costo activo. Priorizar nodos internacionales.")
+        st.warning("₿ **Activo de Resguardo:** Analizando mercados de predicción. Cuidado con la entropía del mercado.")
+    elif any(x in p_low for x in ["diente", "dental", "resina", "protesis", "estetica"]):
+        st.success("🦷 **Insumo Especializado:** Comparativa de costos en curso. Nodo internacional sugerido: Tiendamia.")
     else:
-        st.info("📊 **Análisis General:** Búsqueda estándar activada.")
+        st.info("📊 **Análisis General:** Escaneando nodos de consumo masivo.")
 
     st.markdown("---")
-    st.subheader(f"🎯 Nodos para: {producto}")
+    st.subheader(f"🎯 Nodos de Información: {producto}")
     
-    # Preparación de URLs
+    # Formateo de términos para las URLs
     p_plus = producto.replace(' ', '+')
     p_dash = producto.replace(' ', '-')
     
@@ -45,7 +46,7 @@ if producto:
         "eBay": f"https://www.ebay.com/sch/i.html?_nkw={p_plus}"
     }
 
-    # PANEL DE NODOS (Botones táctiles)
+    # PANEL DE ACCESO RÁPIDO (Botones Táctiles)
     c1, c2 = st.columns(2)
     with c1:
         st.link_button("🇦🇷 Mercado Libre", urls["Mercado Libre"], use_container_width=True)
@@ -57,7 +58,4 @@ if producto:
         st.link_button("🛒 eBay", urls["eBay"], use_container_width=True)
 
     if boton_disparar:
-        st.toast(f"Escaneando nodos para {producto}...", icon='🚀')
-
-st.markdown("---")
-st.caption("QAP - Radar en la Nube v3.3")
+        st.toast(f"Sincronizando con
