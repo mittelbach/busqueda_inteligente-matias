@@ -1,13 +1,13 @@
 import streamlit as st
 import motor_busqueda as motor 
 
-# Configuración de página optimizada para móviles
+# Configuración de página
 st.set_page_config(page_title="Radar de Precios Mittelbach", layout="centered")
 
 st.title("🌐 Centro de Mandos: Radar")
 st.markdown("---")
 
-# Bloque de Entrada de Datos
+# Entrada de Datos
 with st.container():
     producto = st.text_input("¿Qué buscamos hoy, socio?", placeholder="Ej: Resina dental, BTC, XRP...")
     
@@ -18,22 +18,20 @@ with st.container():
         if st.button("🧹 Limpiar", use_container_width=True):
             st.rerun()
 
-# Lógica de Procesamiento
 if producto:
     p_low = producto.lower()
     
-    # --- ANÁLISIS TÁCTICO (Heurística Mittelbach) ---
+    # --- ANÁLISIS TÁCTICO ---
     if any(x in p_low for x in ["btc", "bitcoin", "crypto", "xrp", "eth"]):
-        st.warning("₿ **Activo de Resguardo:** Analizando mercados de predicción. Cuidado con la entropía del mercado.")
-    elif any(x in p_low for x in ["diente", "dental", "resina", "protesis", "estetica"]):
-        st.success("🦷 **Insumo Especializado:** Comparativa de costos en curso. Nodo internacional sugerido: Tiendamia.")
+        st.warning("₿ **Activo de Resguardo:** Analizando mercados. Ojo con la entropía.")
+    elif any(x in p_low for x in ["diente", "dental", "resina", "protesis"]):
+        st.success("🦷 **Insumo Especializado:** Nodo internacional sugerido: Tiendamia.")
     else:
-        st.info("📊 **Análisis General:** Escaneando nodos de consumo masivo.")
+        st.info("📊 **Análisis General:** Escaneando nodos estándar.")
 
     st.markdown("---")
-    st.subheader(f"🎯 Nodos de Información: {producto}")
+    st.subheader(f"🎯 Nodos para: {producto}")
     
-    # Formateo de términos para las URLs
     p_plus = producto.replace(' ', '+')
     p_dash = producto.replace(' ', '-')
     
@@ -46,7 +44,7 @@ if producto:
         "eBay": f"https://www.ebay.com/sch/i.html?_nkw={p_plus}"
     }
 
-    # PANEL DE ACCESO RÁPIDO (Botones Táctiles)
+    # PANEL DE BOTONES (Táctiles para Android)
     c1, c2 = st.columns(2)
     with c1:
         st.link_button("🇦🇷 Mercado Libre", urls["Mercado Libre"], use_container_width=True)
@@ -58,4 +56,7 @@ if producto:
         st.link_button("🛒 eBay", urls["eBay"], use_container_width=True)
 
     if boton_disparar:
-        st.toast(f"Sincronizando con
+        st.toast(f"Escaneando {producto}...", icon='🚀')
+
+st.markdown("---")
+st.caption("QAP - Protocolo Mittelbach v3.3")
