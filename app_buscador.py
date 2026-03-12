@@ -1,34 +1,29 @@
 import streamlit as st
 import motor_busqueda as motor 
 
-# Configuración Mittelbach
+# Configuración Estética Mittelbach
 st.set_page_config(page_title="Radar Mittelbach v4.0", layout="centered")
 
 st.title("🌐 Centro de Mandos: SMLabs")
 
-# Selector de Modo de Radar (Consumo vs Identidad)
+# Selector de Modo de Radar
 modo = st.radio("Seleccione Objetivo del Radar:", ["🛒 Consumo & Global", "👤 Búsqueda de Personas"], horizontal=True)
 
 st.markdown("---")
 
-# MODO 1: CONSUMO Y MERCADOS
+# --- MODO 1: CONSUMO ---
 if modo == "🛒 Consumo & Global":
     producto = st.text_input("¿Qué buscamos hoy, socio?", placeholder="Ej: Queso, Resina, BTC...")
     
     if producto:
-        p_low = producto.lower()
         p_plus = producto.replace(' ', '+')
         p_dash = producto.replace(' ', '-')
         
-        # Ejecución Radar Dinámico
+        # Ejecución Radar
         nodo, precio = motor.obtener_precio_mas_bajo(producto)
-        
-        if any(x in p_low for x in ["btc", "bitcoin", "xrp", "eth"]):
-            st.warning("₿ **Activo de Resguardo:** Analizando mercados. Ojo con la entropía.")
-        else:
-            st.warning(f"🎯 **Radar:** El mejor precio detectado es **${precio:,.2f}** en **{nodo}**.")
+        st.warning(f"🎯 **Radar:** El mejor precio detectado es **${precio:,.2f}** en **{nodo}**.")
 
-        # Nodos de Consumo (Simetría 3x2)
+        # Nodos de Consumo (3x2)
         st.subheader(f"🛒 Nodos de Consumo: {producto}")
         c1, c2 = st.columns(2)
         with c1:
@@ -40,7 +35,7 @@ if modo == "🛒 Consumo & Global":
             st.link_button("🤝 Coop. Obrera", f"https://www.lacoopeencasa.coop/buscar?q={p_plus}", use_container_width=True)
             st.link_button("🏔️ La Anónima", f"https://supermercado.laanonimaonline.com/buscar?busqueda={p_plus}", use_container_width=True)
 
-        # Nodos Globales (Simetría 3x2)
+        # Nodos Globales (3x2)
         st.markdown("---")
         st.subheader("🌎 Nodos Globales")
         g1, g2 = st.columns(2)
@@ -53,15 +48,15 @@ if modo == "🛒 Consumo & Global":
             st.link_button("📦 Amazon", f"https://www.amazon.com/s?k={p_plus}", use_container_width=True)
             st.link_button("🛒 eBay", f"https://www.ebay.com/sch/i.html?_nkw={p_plus}", use_container_width=True)
 
-# MODO 2: RADAR DE IDENTIDAD (Buscador de Personas Potente)
+# --- MODO 2: IDENTIDAD (OSINT) ---
 elif modo == "👤 Búsqueda de Personas":
     persona = st.text_input("Ingrese Nombre Completo:", placeholder="Nombre Apellido")
     
     if persona:
         st.info(f"🔍 **Radar de Identidad:** Escaneando huella digital de: {persona}")
+        # Se llama a la función corregida en motor_busqueda.py
         nodos_id = motor.generar_nodos_persona(persona)
         
-        # Simetría 3x2 para Personas
         i1, i2 = st.columns(2)
         with i1:
             st.link_button("👔 LinkedIn (Profesional)", nodos_id["LinkedIn"], use_container_width=True)
