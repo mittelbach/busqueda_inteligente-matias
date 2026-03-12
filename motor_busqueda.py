@@ -1,27 +1,23 @@
 def obtener_precio_mas_bajo(articulo):
     articulo_l = articulo.lower()
     
-    # Base de datos simulada (esto luego vendrá del scraping real)
+    # Base de datos de escaneo (v3.5)
     nodos = {
         "Mercado Libre": 5200.00,
-        "AliExpress": 850.00,  # Este es el "falso positivo" (ej: un molde)
-        "Amazon": 5100.00
+        "Coto": 4850.00,
+        "Carrefour": 4700.00,
+        "AliExpress": 950.00 # Falso positivo (ej: molde para queso)
     }
 
-    # --- LÓGICA DE EXCLUSIÓN INTELIGENTE ---
-    # Si detectamos productos locales/frescos, ignoramos nodos internacionales
-    productos_locales = ["queso", "carne", "leche", "pan", "fresco", "kilo"]
+    # FILTRO DE PERTINENCIA: Si es comida o productos de "kilo", descartamos China del radar
+    filtro_local = ["queso", "leche", "kilo", "yerba", "carne", "fresco", "pan", "crema"]
     
-    if any(x in articulo_l for x in productos_locales):
-        # Eliminamos AliExpress y Amazon de la comparativa de precio bajo
+    if any(x in articulo_l for x in filtro_local):
         nodos.pop("AliExpress", None)
-        nodos.pop("Amazon", None)
         nodos.pop("Temu", None)
+        nodos.pop("Amazon", None)
 
-    # Si no hay nodos restantes (caso raro), devolvemos un aviso
-    if not nodos:
-        return "Sin nodos locales", 0
-
+    # Identificamos el nodo más barato de los restantes
     mejor_nodo = min(nodos, key=nodos.get)
     precio_minimo = nodos[mejor_nodo]
     
