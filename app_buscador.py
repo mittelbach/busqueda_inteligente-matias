@@ -1,16 +1,14 @@
 import streamlit as st
 import motor_busqueda as motor 
 
-# Configuración de página - Estilo Mittelbach
+# Mantenemos tu configuración original
 st.set_page_config(page_title="Radar de Precios Mittelbach", layout="centered")
 
 st.title("🌐 Centro de Mandos: Radar")
 st.markdown("---")
 
-# Entrada de Datos
 with st.container():
-    producto = st.text_input("¿Qué buscamos hoy, socio?", placeholder="Ej: Resina dental, BTC, XRP...")
-    
+    producto = st.text_input("¿Qué buscamos hoy, socio?", placeholder="Ej: Queso cremoso, Resina, BTC...")
     col1, col2 = st.columns(2)
     with col1:
         boton_disparar = st.button("🚀 Lanzar Radar", use_container_width=True)
@@ -23,52 +21,56 @@ if producto:
     p_plus = producto.replace(' ', '+')
     p_dash = producto.replace(' ', '-')
     
-    # --- ANÁLISIS TÁCTICO ---
-    if any(x in p_low for x in ["btc", "bitcoin", "crypto", "xrp", "eth"]):
-        st.warning("₿ **Activo de Resguardo:** Analizando mercados. Ojo con la entropía.")
-    elif any(x in p_low for x in ["diente", "dental", "resina", "protesis"]):
-        st.success("🦷 **Insumo Especializado:** Nodo internacional sugerido: Tiendamia.")
-    else:
-        st.info("📊 **Análisis General:** Escaneando nodos estándar.")
-
-    # --- CUADRO DE ALERTA (EL MÁS BARATO) ---
-    # Invocamos al motor para obtener el veredicto
+    # --- ANÁLISIS TÁCTICO (Tu diseño original) ---
     nodo_barato, precio_barato = motor.obtener_precio_mas_bajo(producto)
     
-    # El color naranja se logra con st.warning o st.info con CSS, 
-    # aquí usamos warning por la similitud visual con tu captura.
-    st.warning(f"🎯 **Radar:** {nodo_barato} tiene la opción más barata (${precio_barato:,.0f})")
+    if any(x in p_low for x in ["btc", "bitcoin", "xrp"]):
+        st.warning("₿ **Activo de Resguardo:** Analizando mercados cripto.")
+    else:
+        # El cuadro naranja/amarillo que te gustó
+        st.warning(f"🎯 **Radar:** {nodo_barato} tiene la opción más barata (${precio_barato:,.2f})")
 
-    # DISPARADOR AUTOMÁTICO
     if boton_disparar:
-        url_google_auto = f"https://www.google.com.ar/search?q=precio+{p_plus}&tbm=shop"
-        js = f'window.open("{url_google_auto}", "_blank").focus();'
+        js = f'window.open("https://www.google.com.ar/search?q=precio+{p_plus}&tbm=shop", "_blank").focus();'
         st.components.v1.html(f'<script>{js}</script>', height=0)
-        st.toast(f"Escaneando {producto}...", icon='🚀')
 
+    # --- SECCIÓN SUPERMERCADOS (Simetría 3x2) ---
     st.markdown("---")
-    st.subheader(f"🎯 Nodos para: {producto}")
+    st.subheader(f"🛒 Nodos de Consumo: {producto}")
     
-    urls = {
-        "Mercado Libre": f"https://listado.mercadolibre.com.ar/{p_dash}",
-        "Tiendamia": f"https://tiendamia.com/ar/search?amz={p_plus}",
-        "AliExpress": f"https://es.aliexpress.com/w/wholesale-{p_dash}.html",
-        "Amazon": f"https://www.amazon.com/s?k={p_plus}",
-        "eBay": f"https://www.ebay.com/sch/i.html?_nkw={p_plus}",
-        "Temu": f"https://www.temu.com/search_result.html?search_key={p_plus}"
+    # URLs configuradas para búsqueda directa
+    supers = {
+        "Coto": f"https://www.cotodigital3.com.ar/sitios/cdigital/browse?question={p_plus}",
+        "Carrefour": f"https://www.carrefour.com.ar/{p_plus}",
+        "Día": f"https://diaonline.supermercadosdia.com.ar/{p_plus}",
+        "Cencosud": f"https://www.jumbo.com.ar/{p_plus}",
+        "Coope": f"https://www.lacoopeencasa.coop/buscar?q={p_plus}",
+        "La Anónima": f"https://supermercado.laanonimaonline.com/buscar?busqueda={p_plus}"
     }
 
-    # PANEL DE BOTONES
     c1, c2 = st.columns(2)
     with c1:
-        st.link_button("🇦🇷 Mercado Libre", urls["Mercado Libre"], use_container_width=True)
-        st.link_button("✈️ Tiendamia", urls["Tiendamia"], use_container_width=True)
-        st.link_button("🧡 Temu", urls["Temu"], use_container_width=True)
+        st.link_button("🇦🇷 Coto Digital", supers["Coto"], use_container_width=True)
+        st.link_button("🇫🇷 Carrefour", supers["Carrefour"], use_container_width=True)
+        st.link_button("🇪🇸 Día Online", supers["Día"], use_container_width=True)
     with c2:
-        st.link_button("🇨🇳 AliExpress", urls["AliExpress"], use_container_width=True)
-        st.link_button("📦 Amazon", urls["Amazon"], use_container_width=True)
-        st.link_button("🛒 eBay", urls["eBay"], use_container_width=True)
+        st.link_button("🏢 Cencosud", supers["Cencosud"], use_container_width=True)
+        st.link_button("🤝 Cooperativa Obrera", supers["Coope"], use_container_width=True)
+        st.link_button("🏔️ La Anónima", supers["La Anónima"], use_container_width=True)
+
+    # --- SECCIÓN GLOBAL (Tu diseño original) ---
+    st.markdown("---")
+    st.subheader(f"🌎 Nodos Globales")
+    
+    g1, g2 = st.columns(2)
+    with g1:
+        st.link_button("🇦🇷 Mercado Libre", f"https://listado.mercadolibre.com.ar/{p_dash}", use_container_width=True)
+        st.link_button("✈️ Tiendamia", f"https://tiendamia.com/ar/search?amz={p_plus}", use_container_width=True)
+        st.link_button("🧡 Temu", f"https://www.temu.com/search_result.html?search_key={p_plus}", use_container_width=True)
+    with g2:
+        st.link_button("🇨🇳 AliExpress", f"https://es.aliexpress.com/w/wholesale-{p_dash}.html", use_container_width=True)
+        st.link_button("📦 Amazon", f"https://www.amazon.com/s?k={p_plus}", use_container_width=True)
+        st.link_button("🛒 eBay", f"https://www.ebay.com/sch/i.html?_nkw={p_plus}", use_container_width=True)
 
 st.markdown("---")
-st.caption("QAP - Protocolo SMLabs v3.5 | Cuadro de Comparativa Activado")
-
+st.caption("QAP - Protocolo SMLabs v3.5 | Nodos de Consumo Activados")
