@@ -13,7 +13,7 @@ def obtener_precio_mas_bajo(articulo):
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
     }
 
-    # Nodos de control de precios
+    # Nodos de control de precios locales
     nodos_fijos = {
         "Mercado Libre": 5200.0,
         "Carrefour": 4700.0,
@@ -29,23 +29,22 @@ def obtener_precio_mas_bajo(articulo):
     except:
         pass
 
-    # Respaldo por rubro
+    # Respaldo por rubro si falla el rastreo vivo
     if any(x in articulo_l for x in ["queso", "paulina", "leche", "yerba"]):
         ganador = min(nodos_fijos, key=nodos_fijos.get)
         return ganador, nodos_fijos[ganador]
     
     return "AliExpress", 950.0
 
-def generar_nodos_persona(nombre):
-    """Genera los 6 nodos de identidad para búsqueda OSINT. Crucial para evitar el AttributeError."""
+def generar_nodos_genealogia(nombre):
+    """Genera los 6 nodos de búsqueda de antepasados y archivos históricos de gobierno."""
     n_plus = nombre.replace(' ', '+')
-    n_dash = nombre.replace(' ', '-')
     
     return {
-        "LinkedIn": f"https://www.google.com/search?q=site:linkedin.com+{n_plus}",
-        "Dateas": f"https://www.dateas.com/es/busqueda?q={n_plus}",
-        "CuitOnline": f"https://www.cuitonline.com/search.php?q={n_plus}",
-        "Instagram": f"https://www.instagram.com/{n_dash}/",
-        "Facebook": f"https://www.facebook.com/search/top/?q={n_plus}",
-        "Scholar": f"https://scholar.google.com.ar/scholar?q={n_plus}"
+        "FamilySearch": f"https://www.familysearch.org/search/record/results?q.anyPersona.name={n_plus}",
+        "Antenati": f"https://antenati.cultura.gov.ar/search-nominative/?nome_cognome={n_plus}",
+        "CEMLA": f"https://www.cemla.com/buscador/",
+        "Geneanet": f"https://es.geneanet.org/fonds/individus/?name={n_plus}",
+        "MyHeritage": f"https://www.myheritage.es/research?action=query&formId=master&qname=Name.{n_plus}",
+        "PARES": f"http://pares.mcu.es/ParesBusquedas20/catalogo/search?q={n_plus}"
     }
