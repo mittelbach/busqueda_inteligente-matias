@@ -59,4 +59,5 @@ if producto:
         st.toast(f"Escaneando {producto}...", icon='🚀')
 
 st.markdown("---")
-st.caption("QAP - Protocolo Mittelbach v3.3")
+st.caption("QAP - Protocolo SMLabs v3.3")
+
