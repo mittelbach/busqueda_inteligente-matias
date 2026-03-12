@@ -1,0 +1,15 @@
+{
+  "short_name": "Radar SMLabs",
+  "name": "Radar de Precios Mittelbach v3.4",
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/mittelbach/busqueda_inteligente-matias/main/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#fdf6e3",
+  "background_color": "#fdf6e3"
+}
