@@ -1,7 +1,7 @@
 import streamlit as st
 import motor_busqueda as motor 
 
-# Configuración de página
+# Configuración de página - Estilo Mittelbach
 st.set_page_config(page_title="Radar de Precios Mittelbach", layout="centered")
 
 st.title("🌐 Centro de Mandos: Radar")
@@ -23,9 +23,6 @@ if producto:
     p_plus = producto.replace(' ', '+')
     p_dash = producto.replace(' ', '-')
     
-    # URL de Google Shopping para el disparo automático
-    url_google_auto = f"https://www.google.com.ar/search?q=precio+{p_plus}&tbm=shop"
-    
     # --- ANÁLISIS TÁCTICO ---
     if any(x in p_low for x in ["btc", "bitcoin", "crypto", "xrp", "eth"]):
         st.warning("₿ **Activo de Resguardo:** Analizando mercados. Ojo con la entropía.")
@@ -34,12 +31,20 @@ if producto:
     else:
         st.info("📊 **Análisis General:** Escaneando nodos estándar.")
 
-    # DISPARADOR AUTOMÁTICO (Simula el comportamiento de la versión CSV)
+    # --- CUADRO DE ALERTA (EL MÁS BARATO) ---
+    # Invocamos al motor para obtener el veredicto
+    nodo_barato, precio_barato = motor.obtener_precio_mas_bajo(producto)
+    
+    # El color naranja se logra con st.warning o st.info con CSS, 
+    # aquí usamos warning por la similitud visual con tu captura.
+    st.warning(f"🎯 **Radar:** {nodo_barato} tiene la opción más barata (${precio_barato:,.0f})")
+
+    # DISPARADOR AUTOMÁTICO
     if boton_disparar:
-        # Abrir Google Shopping automáticamente mediante JS
+        url_google_auto = f"https://www.google.com.ar/search?q=precio+{p_plus}&tbm=shop"
         js = f'window.open("{url_google_auto}", "_blank").focus();'
         st.components.v1.html(f'<script>{js}</script>', height=0)
-        st.toast(f"Escaneando {producto} en Google Shopping...", icon='🚀')
+        st.toast(f"Escaneando {producto}...", icon='🚀')
 
     st.markdown("---")
     st.subheader(f"🎯 Nodos para: {producto}")
@@ -53,7 +58,7 @@ if producto:
         "Temu": f"https://www.temu.com/search_result.html?search_key={p_plus}"
     }
 
-    # PANEL DE BOTONES (v3.4 con Temu)
+    # PANEL DE BOTONES
     c1, c2 = st.columns(2)
     with c1:
         st.link_button("🇦🇷 Mercado Libre", urls["Mercado Libre"], use_container_width=True)
@@ -65,4 +70,5 @@ if producto:
         st.link_button("🛒 eBay", urls["eBay"], use_container_width=True)
 
 st.markdown("---")
-st.caption("QAP - Protocolo SMLabs v3.4 | Radar Automático Activado")
+st.caption("QAP - Protocolo SMLabs v3.5 | Cuadro de Comparativa Activado")
+
