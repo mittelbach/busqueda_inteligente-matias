@@ -2,27 +2,39 @@ import streamlit as st
 import requests
 from bs4 import BeautifulSoup
 
-# --- 1. CONFIGURACIÓN VISUAL (MANTENIENDO EL ESTILO) ---
+# --- 1. FORZADO DE COLOR AZUL MARINO / OSCURO ---
 st.set_page_config(page_title="Busca Fácil", page_icon="🔍", layout="centered")
 
-# Inyección de CSS para asegurar que los colores se mantengan profesionales
+# Inyectamos el CSS para matar el color crema y poner Azul Marino
 st.markdown("""
     <style>
-    .main {
-        background-color: #0e1117;
-        color: #fafafa;
+    /* Fondo principal */
+    .stApp {
+        background-color: #001f3f; /* Azul Marino Profundo */
     }
+    /* Color de los textos */
+    h1, h2, h3, p, span, label {
+        color: #ffffff !important;
+    }
+    /* Estilo de los botones (Nodos) */
     .stButton>button {
         width: 100%;
-        border-radius: 5px;
-        height: 3em;
-        background-color: #262730;
+        border-radius: 8px;
+        height: 3.5em;
+        background-color: #003366; /* Azul un poco más claro para botones */
         color: white;
-        border: 1px solid #4x4x4x;
+        border: 1px solid #00ffa2; /* Borde turquesa para que resalte */
+        font-weight: bold;
     }
     .stButton>button:hover {
-        border-color: #00ffa2;
-        color: #00ffa2;
+        background-color: #00ffa2;
+        color: #001f3f;
+        border: 1px solid #ffffff;
+    }
+    /* Input de texto */
+    .stTextInput>div>div>input {
+        background-color: #f0f2f6;
+        color: #001f3f;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -31,6 +43,7 @@ st.markdown("""
 def buscar_oferta_destacada(query):
     try:
         headers = {'User-Agent': 'Mozilla/5.0'}
+        # Apuntamos a la sección de ofertas de Meli Argentina
         url = f"https://www.mercadolibre.com.ar/ofertas?keywords={query}"
         response = requests.get(url, headers=headers, timeout=5)
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -44,7 +57,7 @@ def buscar_oferta_destacada(query):
 # --- 3. INTERFAZ DE USUARIO ---
 st.title("Busca Fácil:")
 
-# Selector de Categoría (Igual al original)
+# Selector de Categoría (Horizontal y Blanco)
 categoria = st.radio("Seleccioná el sector de búsqueda:", ["Tecno y Vestimenta", "Alimentos"], horizontal=True)
 
 # Input de búsqueda
