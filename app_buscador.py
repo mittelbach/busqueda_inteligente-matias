@@ -2,101 +2,95 @@ import streamlit as st
 import requests
 from bs4 import BeautifulSoup
 
-# --- 1. FORZADO DE COLOR AZUL MARINO / OSCURO ---
+# --- 1. CONFIGURACIÓN VISUAL (ESTILO PROFESIONAL LSA) ---
 st.set_page_config(page_title="Busca Fácil", page_icon="🔍", layout="centered")
 
-# Inyectamos el CSS para matar el color crema y poner Azul Marino
 st.markdown("""
     <style>
-    /* Fondo principal */
     .stApp {
-        background-color: #001f3f; /* Azul Marino Profundo */
+        background-color: #001f3f;
     }
-    /* Color de los textos */
     h1, h2, h3, p, span, label {
         color: #ffffff !important;
     }
-    /* Estilo de los botones (Nodos) */
+    /* BOTONES: Contraste Asegurado */
     .stButton>button {
         width: 100%;
         border-radius: 8px;
         height: 3.5em;
-        background-color: #003366; /* Azul un poco más claro para botones */
-        color: white;
-        border: 1px solid #00ffa2; /* Borde turquesa para que resalte */
+        background-color: #003366 !important;
+        color: #ffffff !important; /* Letras Blancas */
+        border: 2px solid #00ffa2 !important;
         font-weight: bold;
     }
     .stButton>button:hover {
-        background-color: #00ffa2;
-        color: #001f3f;
-        border: 1px solid #ffffff;
+        background-color: #00ffa2 !important;
+        color: #001f3f !important;
     }
-    /* Input de texto */
+    /* Input de búsqueda */
     .stTextInput>div>div>input {
-        background-color: #f0f2f6;
-        color: #001f3f;
+        background-color: #ffffff !important;
+        color: #000000 !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. FUNCIÓN DE CAZA DE OFERTAS ---
-def buscar_oferta_destacada(query):
+# --- 2. MOTOR DE CAZA DE OFERTAS (CON ORIGEN) ---
+def buscar_oferta_meli(query):
     try:
         headers = {'User-Agent': 'Mozilla/5.0'}
-        # Apuntamos a la sección de ofertas de Meli Argentina
         url = f"https://www.mercadolibre.com.ar/ofertas?keywords={query}"
         response = requests.get(url, headers=headers, timeout=5)
         soup = BeautifulSoup(response.text, 'html.parser')
         
         precio = soup.find('span', {'class': 'andes-money-amount__fraction'}).text
         descuento = soup.find('span', {'class': 'andes-money-amount__discount'}).text
-        return f"💰 ${precio} ({descuento} OFF)"
+        # Retornamos precio, descuento y el nombre del portal
+        return f"💰 **${precio}** ({descuento} OFF) en **Mercado Libre 🇦🇷**"
     except:
         return None
 
 # --- 3. INTERFAZ DE USUARIO ---
 st.title("Busca Fácil:")
 
-# Selector de Categoría (Horizontal y Blanco)
 categoria = st.radio("Seleccioná el sector de búsqueda:", ["Tecno y Vestimenta", "Alimentos"], horizontal=True)
 
-# Input de búsqueda
-producto = st.text_input(f"¿Qué {categoria.lower()} buscamos hoy?", placeholder="Escribí aquí...")
+producto = st.text_input(f"¿Qué {categoria.lower()} buscamos?", placeholder="Escribí y presioná Enter...")
 
 if producto:
-    # LÍNEA INYECTADA: Detección de Ofertas
-    with st.spinner('Escaneando oportunidades...'):
-        oferta = buscar_oferta_destacada(producto)
-        if oferta:
-            st.success(f"🔥 **OFERTA DE LA SEMANA DETECTADA:** {oferta}")
+    # LÍNEA INYECTADA: Ofertas con Origen
+    with st.spinner('Rastreando el origen de la mejor oferta...'):
+        resultado_oferta = buscar_oferta_meli(producto)
+        
+        if resultado_oferta:
+            st.success(f"🔥 **OFERTA DETECTADA:** {resultado_oferta}")
+        else:
+            st.info("No hay etiquetas de 'Oferta' activas ahora. Probá con los nodos de abajo.")
 
     st.markdown(f"### Nodos de {categoria}:")
 
-    # --- LÓGICA DE NODOS ORIGINAL ---
+    # --- ESTRUCTURA DE 4 NODOS POR FILA ---
     if categoria == "Tecno y Vestimenta":
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3, col4 = st.columns(4)
         with col1:
-            url_meli = f"https://lista.mercadolibre.com.ar/{producto.replace(' ', '-')}"
-            st.link_button("Mercado Libre 🇦🇷", url_meli)
+            st.link_button("Meli 🇦🇷", f"https://lista.mercadolibre.com.ar/{producto.replace(' ', '-')}")
         with col2:
-            url_amz = f"https://www.amazon.com/s?k={producto}"
-            st.link_button("Amazon 🌐", url_amz)
+            st.link_button("Amazon 🌐", f"https://www.amazon.com/s?k={producto}")
         with col3:
-            url_ali = f"https://es.aliexpress.com/wholesale?SearchText={producto}"
-            st.link_button("AliExpress 🇨🇳", url_ali)
+            st.link_button("AliExpress 🇨🇳", f"https://es.aliexpress.com/wholesale?SearchText={producto}")
+        with col4:
+            st.link_button("eBay 🇺🇸", f"https://www.ebay.com/sch/i.html?_nkw={producto}")
 
     elif categoria == "Alimentos":
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3, col4 = st.columns(4)
         with col1:
-            url_carrefour = f"https://www.carrefour.com.ar/{producto}"
-            st.link_button("Carrefour", url_carrefour)
+            st.link_button("Carrefour", f"https://www.carrefour.com.ar/{producto}")
         with col2:
-            url_jumbo = f"https://www.jumbo.com.ar/{producto}"
-            st.link_button("Jumbo", url_jumbo)
+            st.link_button("Jumbo", f"https://www.jumbo.com.ar/{producto}")
         with col3:
-            url_coto = f"https://www.cotodigital3.com.ar/sitios/cdigi/browse?_dyncharset=utf-8&question={producto}"
-            st.link_button("Coto", url_coto)
+            st.link_button("Coto", f"https://www.cotodigital3.com.ar/sitios/cdigi/browse?_dyncharset=utf-8&question={producto}")
+        with col4:
+            st.link_button("Vea", f"https://www.vea.com.ar/{producto}")
 
-# Pie de página
 st.divider()
 st.caption("Busca Fácil - Matías Mittelbach © 2026")
