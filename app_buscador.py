@@ -1,60 +1,55 @@
 import streamlit as st
-import motor_busqueda as motor 
 
-st.set_page_config(page_title="Radar Mittelbach v8.8", layout="centered")
+# Configuración de página
+st.set_page_config(page_title="Radar Mittelbach v9.0", layout="centered")
 
-if 'contador' not in st.session_state:
-    st.session_state.contador = 0
-
-def limpiar_radar():
-    st.session_state.contador += 1
+# --- ESTILO DARK MODE ---
+st.markdown("""
+    <style>
+    .stApp { background-color: #0e1117; color: #ffffff; }
+    .stButton>button { width: 100%; border-radius: 5px; height: 3em; background-color: #262730; color: white; }
+    </style>
+    """, unsafe_allow_html=True)
 
 st.title("🌐 Centro de Mandos: SMLabs")
 st.markdown("---")
 
-col_in, col_btn = st.columns([4, 1])
-with col_in:
-    entrada = st.text_input(
-        "Ingresar consulta:", 
-        key=f"input_{st.session_state.contador}",
-        placeholder="Ej: Queso Port Salut o Laptop..."
-    )
+# --- SELECTOR DE MUNDO (CATEGORÍAS) ---
+mundo = st.radio(
+    "Seleccionar Mundo:",
+    ["🍎 Alimentos (Carbono)", "💻 Tecnológicos (Silicio)"],
+    horizontal=True
+)
 
-with col_btn:
-    st.write("") 
-    st.write("")
-    if st.button("🗑️ Limpiar"):
-        limpiar_radar()
-        st.rerun()
+# --- ENTRADA DE DATOS ---
+entrada = st.text_input("Ingresar consulta:", placeholder="Ej: Queso Port Salut, Laptop, etc...")
 
 if entrada:
-    info = motor.obtener_datos_radar(entrada)
-    st.warning(f"🎯 **Radar:** Precio estimado **{info['precio']}** en **{info['mercado']}**.")
-
-    # Disparo automático
     p_url = entrada.replace(' ', '+')
-    url_auto = f"https://www.google.com/search?q={p_url}+price" + ("+argentina" if info['tipo'] == "carbono" else "+usd")
-    st.components.v1.html(f'<script>window.open("{url_auto}", "_blank").focus();</script>', height=0)
-
-    # --- NODOS DINÁMICOS AMPLIADOS ---
-    if info['tipo'] == "carbono":
+    
+    if "Alimentos" in mundo:
         st.subheader("🛒 Nodos de Consumo Local (Argentina)")
         c1, c2 = st.columns(2)
         with c1:
-            st.link_button("🇦🇷 Coto Digital", f"https://www.cotodigital3.com.ar/sitios/cdigital/browse?question={entrada}", use_container_width=True)
-            st.link_button("🇫🇷 Carrefour", f"https://www.carrefour.com.ar/{entrada}", use_container_width=True)
+            st.link_button("🇦🇷 Coto Digital", f"https://www.cotodigital3.com.ar/sitios/cdigital/browse?question={p_url}")
+            st.link_button("🇫🇷 Carrefour", f"https://www.carrefour.com.ar/{p_url}")
+            st.link_button("🛒 Google Shopping (AR)", f"https://www.google.com/search?q={p_url}+precio+argentina&tbm=shop")
         with c2:
-            st.link_button("🤝 Coop. Obrera", f"https://www.lacoopeencasa.coop/buscar?q={entrada}", use_container_width=True)
-            st.link_button("🇨🇱 Jumbo", f"https://www.jumbo.com.ar/{entrada}", use_container_width=True)
+            st.link_button("🤝 Coop. Obrera", f"https://www.lacoopeencasa.coop/buscar?q={p_url}")
+            st.link_button("🇨🇱 Jumbo", f"https://www.jumbo.com.ar/{p_url}")
+            st.link_button("🏢 Mercado Libre", f"https://listado.mercadolibre.com.ar/{p_url}")
+
     else:
         st.subheader("🌎 Nodos Globales (Tecnología)")
         g1, g2 = st.columns(2)
         with g1:
-            st.link_button("🇨🇳 AliExpress", f"https://es.aliexpress.com/w/wholesale-{entrada}.html", use_container_width=True)
-            st.link_button("📦 Amazon", f"https://www.amazon.com/s?k={entrada}", use_container_width=True)
+            st.link_button("🇨🇳 AliExpress", f"https://es.aliexpress.com/w/wholesale-{p_url}.html")
+            st.link_button("📦 Amazon", f"https://www.amazon.com/s?k={p_url}")
+            st.link_button("🔍 Google Shopping (USD)", f"https://www.google.com/search?q={p_url}+price+usd&tbm=shop")
         with g2:
-            st.link_button("🛒 eBay", f"https://www.ebay.com/sch/i.html?_nkw={entrada}", use_container_width=True)
-            st.link_button("🧡 Temu", f"https://www.temu.com/search_result.html?search_key={entrada}", use_container_width=True)
+            st.link_button("🛒 eBay", f"https://www.ebay.com/sch/i.html?_nkw={p_url}")
+            st.link_button("🧡 Temu", f"https://www.temu.com/search_result.html?search_key={p_url}")
+            st.link_button("💻 B&H Photo", f"https://www.bhphotovideo.com/c/search?Ntt={p_url}")
 
 st.markdown("---")
-st.caption(f"QAP - v8.8 | Cobertura total: 4 nodos por mundo.")
+st.caption("QAP - Radar Mittelbach v9.0 | SMLabs Systems")
