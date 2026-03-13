@@ -2,51 +2,63 @@ import streamlit as st
 import requests
 from bs4 import BeautifulSoup
 
-# --- 1. CONFIGURACIÓN VISUAL (ESTILO PROFESIONAL LSA) ---
+# --- 1. CONFIGURACIÓN VISUAL (AZUL MARINO Y CONTRASTE EXTREMO) ---
 st.set_page_config(page_title="Busca Fácil", page_icon="🔍", layout="centered")
 
 st.markdown("""
     <style>
+    /* Fondo de la App */
     .stApp {
-        background-color: #001f3f;
+        background-color: #001f3f !important;
     }
+    
+    /* Textos generales */
     h1, h2, h3, p, span, label {
         color: #ffffff !important;
     }
-    /* BOTONES: Contraste Asegurado */
+
+    /* BUSCADOR: Fondo blanco, Letras NEGRAS (Para que se vea lo que escribís) */
+    .stTextInput>div>div>input {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        caret-color: #000000 !important;
+    }
+
+    /* BOTONES (NODOS): Fondo Azul Oscuro, Letras BLANCAS, Borde Neón */
     .stButton>button {
         width: 100%;
         border-radius: 8px;
         height: 3.5em;
-        background-color: #003366 !important;
-        color: #ffffff !important; /* Letras Blancas */
+        background-color: #003366 !important; /* Azul botón */
+        color: #ffffff !important; /* LETRAS BLANCAS FORZADAS */
         border: 2px solid #00ffa2 !important;
         font-weight: bold;
     }
+
+    /* Hover de botones */
     .stButton>button:hover {
         background-color: #00ffa2 !important;
         color: #001f3f !important;
     }
-    /* Input de búsqueda */
-    .stTextInput>div>div>input {
-        background-color: #ffffff !important;
-        color: #000000 !important;
-    }
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. MOTOR DE CAZA DE OFERTAS (CON ORIGEN) ---
+# --- 2. FUNCIÓN DE CAZA DE OFERTAS (MEJORADA PARA EVITAR ERRORES) ---
 def buscar_oferta_meli(query):
     try:
         headers = {'User-Agent': 'Mozilla/5.0'}
+        # Agregamos filtros para que busque productos con mayor relevancia
         url = f"https://www.mercadolibre.com.ar/ofertas?keywords={query}"
         response = requests.get(url, headers=headers, timeout=5)
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        precio = soup.find('span', {'class': 'andes-money-amount__fraction'}).text
-        descuento = soup.find('span', {'class': 'andes-money-amount__discount'}).text
-        # Retornamos precio, descuento y el nombre del portal
-        return f"💰 **${precio}** ({descuento} OFF) en **Mercado Libre 🇦🇷**"
+        # Buscamos los contenedores de productos de oferta
+        item = soup.find('div', {'class': 'promotion-item__container'})
+        if item:
+            precio = item.find('span', {'class': 'andes-money-amount__fraction'}).text
+            descuento = item.find('span', {'class': 'andes-money-amount__discount'}).text
+            nombre_corto = item.find('p', {'class': 'promotion-item__title'}).text[:30] # Limitamos texto
+            return f"💰 **${precio}** ({descuento} OFF) - *{nombre_corto}...* en **Meli 🇦🇷**"
     except:
         return None
 
@@ -55,21 +67,22 @@ st.title("Busca Fácil:")
 
 categoria = st.radio("Seleccioná el sector de búsqueda:", ["Tecno y Vestimenta", "Alimentos"], horizontal=True)
 
-producto = st.text_input(f"¿Qué {categoria.lower()} buscamos?", placeholder="Escribí y presioná Enter...")
+producto = st.text_input(f"¿Qué {categoria.lower()} buscamos hoy?", placeholder="Escribí y presioná Enter...")
 
 if producto:
-    # LÍNEA INYECTADA: Ofertas con Origen
-    with st.spinner('Rastreando el origen de la mejor oferta...'):
+    # LÍNEA INYECTADA: Ofertas
+    with st.spinner('Analizando veracidad de ofertas...'):
         resultado_oferta = buscar_oferta_meli(producto)
         
         if resultado_oferta:
+            # Usamos un contenedor que resalte pero no tape
             st.success(f"🔥 **OFERTA DETECTADA:** {resultado_oferta}")
         else:
-            st.info("No hay etiquetas de 'Oferta' activas ahora. Probá con los nodos de abajo.")
+            st.info("No hay 'Ofertas Relámpago' ahora. Usá los nodos para búsqueda general.")
 
     st.markdown(f"### Nodos de {categoria}:")
 
-    # --- ESTRUCTURA DE 4 NODOS POR FILA ---
+    # --- ESTRUCTURA DE 4 NODOS ---
     if categoria == "Tecno y Vestimenta":
         col1, col2, col3, col4 = st.columns(4)
         with col1:
