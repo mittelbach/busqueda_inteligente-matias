@@ -1,55 +1,77 @@
 import streamlit as st
+import requests
+from bs4 import BeautifulSoup
 
-# Configuración de página
-st.set_page_config(page_title="Radar Mittelbach v9.0", layout="centered")
+# --- CONFIGURACIÓN DE PÁGINA ---
+st.set_page_config(page_title="Busca Fácil", page_icon="🔍")
 
-# --- ESTILO DARK MODE ---
-st.markdown("""
-    <style>
-    .stApp { background-color: #0e1117; color: #ffffff; }
-    .stButton>button { width: 100%; border-radius: 5px; height: 3em; background-color: #262730; color: white; }
-    </style>
-    """, unsafe_allow_html=True)
+# --- FUNCIÓN DE CAZA DE OFERTAS (LA INYECCIÓN) ---
+def buscar_oferta_destacada(query):
+    try:
+        # Buscamos en la sección de ofertas de Mercado Libre Argentina
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        url = f"https://www.mercadolibre.com.ar/ofertas?keywords={query}"
+        response = requests.get(url, headers=headers, timeout=5)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        # Intentamos capturar el primer precio y el % de descuento
+        precio = soup.find('span', {'class': 'andes-money-amount__fraction'}).text
+        descuento = soup.find('span', {'class': 'andes-money-amount__discount'}).text
+        return f"💰 ${precio} ({descuento} OFF)"
+    except:
+        return None
 
-st.title("🌐 Busca Facil: SMLabs")
-st.markdown("---")
+# --- INTERFAZ DE USUARIO ---
+st.title("Busca Fácil:")
 
-# --- SELECTOR DE MUNDO (CATEGORÍAS) ---
-mundo = st.radio(
-    "Seleccionar Mundo:",
-    ["🍎 Alimentos (Carbono)", "💻 Tecno y Vestimenta (Silicio)"],
-    horizontal=True
-)
+# Input de búsqueda
+producto = st.text_input("¿Qué estás buscando?", placeholder="Ej: zapatillas, celular, televisor...")
 
-# --- ENTRADA DE DATOS ---
-entrada = st.text_input("Ingresar consulta:", placeholder="Ej: Queso Port Salut, Laptop, etc...")
+if producto:
+    # 1. LÍNEA INYECTADA: Detección de Ofertas de la Semana
+    with st.spinner('Rastreando ofertas calientes...'):
+        oferta = buscar_oferta_destacada(producto)
+        if oferta:
+            st.success(f"🔥 **OFERTA DE LA SEMANA DETECTADA:** {oferta} en la sección especial.")
+        else:
+            st.info("No detecté etiquetas de 'Oferta' activas, pero podés revisar los nodos abajo.")
 
-if entrada:
-    p_url = entrada.replace(' ', '+')
+    st.subheader("Seleccioná un Nodo de búsqueda:")
+
+    # --- NODOS DE BÚSQUEDA ---
     
-    if "Alimentos" in mundo:
-        st.subheader("🛒 Nodos de Consumo Local (Argentina)")
-        c1, c2 = st.columns(2)
-        with c1:
-            st.link_button("🇦🇷 Coto Digital", f"https://www.cotodigital3.com.ar/sitios/cdigital/browse?question={p_url}")
-            st.link_button("🇫🇷 Carrefour", f"https://www.carrefour.com.ar/{p_url}")
-            st.link_button("🛒 Google Shopping (AR)", f"https://www.google.com/search?q={p_url}+precio+argentina&tbm=shop")
-        with c2:
-            st.link_button("🤝 Coop. Obrera", f"https://www.lacoopeencasa.coop/buscar?q={p_url}")
-            st.link_button("🇨🇱 Jumbo", f"https://www.jumbo.com.ar/{p_url}")
-            st.link_button("🏢 Mercado Libre", f"https://listado.mercadolibre.com.ar/{p_url}")
+    # Categoría: Tecno y Vestimenta
+    st.markdown("### 📱 Tecno y Vestimenta")
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        url_meli = f"https://lista.mercadolibre.com.ar/{producto.replace(' ', '-')}"
+        st.link_button("Mercado Libre 🇦🇷", url_meli)
+        
+    with col2:
+        url_amz = f"https://www.amazon.com/s?k={producto}"
+        st.link_button("Amazon 🌐", url_amz)
+        
+    with col3:
+        url_ali = f"https://es.aliexpress.com/wholesale?SearchText={producto}"
+        st.link_button("AliExpress 🇨🇳", url_ali)
 
-    else:
-        st.subheader("🌎 Nodos Globales (Tecnología)")
-        g1, g2 = st.columns(2)
-        with g1:
-            st.link_button("🇨🇳 AliExpress", f"https://es.aliexpress.com/w/wholesale-{p_url}.html")
-            st.link_button("📦 Amazon", f"https://www.amazon.com/s?k={p_url}")
-            st.link_button("🔍 Google Shopping (USD)", f"https://www.google.com/search?q={p_url}+price+usd&tbm=shop")
-        with g2:
-            st.link_button("🛒 eBay", f"https://www.ebay.com/sch/i.html?_nkw={p_url}")
-            st.link_button("🧡 Temu", f"https://www.temu.com/search_result.html?search_key={p_url}")
-            st.link_button("💻 B&H Photo", f"https://www.bhphotovideo.com/c/search?Ntt={p_url}")
+    # Categoría: Alimentos y Supermercado
+    st.markdown("### 🛒 Alimentos y Super")
+    col4, col5, col6 = st.columns(3)
+    
+    with col4:
+        url_carrefour = f"https://www.carrefour.com.ar/{producto}"
+        st.link_button("Carrefour", url_carrefour)
+        
+    with col5:
+        url_jumbo = f"https://www.jumbo.com.ar/{producto}"
+        st.link_button("Jumbo", url_jumbo)
+        
+    with col6:
+        url_coto = f"https://www.cotodigital3.com.ar/sitios/cdigi/browse?_dyncharset=utf-8&question={producto}"
+        st.link_button("Coto", url_coto)
 
-st.markdown("---")
-st.caption("QAP - Radar Mittelbach v9.0 | SMLabs Systems")
+# Pie de página simple
+st.divider()
+st.caption("Busca Fácil - Inteligencia de Mercado")
