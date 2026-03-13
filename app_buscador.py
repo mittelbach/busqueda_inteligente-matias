@@ -11,13 +11,13 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-st.title("🌐 Centro de Mandos: SMLabs")
+st.title("🌐 Busca Facil: SMLabs")
 st.markdown("---")
 
 # --- SELECTOR DE MUNDO (CATEGORÍAS) ---
 mundo = st.radio(
     "Seleccionar Mundo:",
-    ["🍎 Alimentos (Carbono)", "💻 Tecnológicos (Silicio)"],
+    ["🍎 Alimentos (Carbono)", "💻 Tecno y Vestimenta (Silicio)"],
     horizontal=True
 )
 
