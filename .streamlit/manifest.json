@@ -1,16 +1,15 @@
 {
-  "name": "Find Easy Radar",
+  "name": "Find Easy",
   "short_name": "Radar",
-  "start_url": "/",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#0e1117",
   "theme_color": "#00d4ff",
   "icons": [
     {
-      "src": "/busca_facil.png",
+      "src": "busca_facil.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ]
 }
