@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 from bs4 import BeautifulSoup
 
-# --- 1. CONFIGURACIÓN VISUAL (GRIS TOPO Y AZUL MARINO) ---
+# --- 1. CONFIGURACIÓN VISUAL (AZUL MARINO + GRIS TOPO + LETRAS GRANDES) ---
 st.set_page_config(page_title="Busca Fácil", page_icon="🔍", layout="centered")
 
 st.markdown("""
@@ -12,50 +12,56 @@ st.markdown("""
         background-color: #001f3f !important;
     }
     
-    /* BUSCADOR (ENTER): Color Gris Topo */
-    .stTextInput input {
-        background-color: #484848 !important; /* Gris Topo */
-        color: #ffffff !important; /* Letras Blancas para que se lean bien */
-        border: 1px solid #00ffa2 !important;
+    /* LETRAS GRANDES (Título y Subtítulos) */
+    h1 {
+        font-size: 3.5rem !important;
+        color: #ffffff !important;
+        font-weight: 800 !important;
+    }
+    h3 {
+        font-size: 2rem !important;
+        color: #ffffff !important;
     }
     
-    /* Placeholder (lo que dice 'Escribí aquí...') en gris claro */
+    /* BUSCADOR (EL "ENTER"): Gris Topo con LETRAS BLANCAS FUERTES */
+    .stTextInput input {
+        background-color: #484848 !important; /* Gris Topo Interno */
+        color: #ffffff !important; /* TEXTO QUE TIPEA EL USUARIO EN BLANCO */
+        font-size: 1.5rem !important; /* Letra más grande para el input */
+        border: 2px solid #00ffa2 !important; /* Borde neón para marcar el área */
+        border-radius: 10px !important;
+        padding: 10px !important;
+    }
+    
+    /* Color del cursor y del texto de ayuda */
     .stTextInput input::placeholder {
-        color: #cccccc !important;
+        color: #bbbbbb !important;
     }
 
-    /* BOTONES (NODOS): Fondo Gris Topo Fijo */
+    /* NODOS: Gris Topo con Letra Blanca */
     div.stButton > button {
         width: 100%;
         border-radius: 8px;
-        height: 3.5em;
-        background-color: #484848 !important; /* Gris Topo */
+        height: 4em;
+        background-color: #484848 !important; 
         border: 1px solid #00ffa2 !important;
-        transition: all 0.3s ease;
     }
 
-    /* TEXTO DE BOTONES: Blanco absoluto, sin sombras */
+    /* Texto de los Nodos en Blanco Fijo */
     div.stButton > button div p, 
     div.stButton > button span {
         color: #ffffff !important;
         font-weight: bold !important;
-        text-shadow: none !important;
+        font-size: 1.1rem !important;
     }
 
-    /* HOVER: Cuando pasas el mouse, se ilumina el borde */
+    /* Efecto al tocar/pasar el mouse */
     div.stButton > button:hover {
         background-color: #00ffa2 !important;
-        border: 2px solid #ffffff !important;
     }
-    
-    div.stButton > button:hover div p,
-    div.stButton > button:hover span {
-        color: #001f3f !important; /* Texto azul oscuro sobre fondo turquesa */
+    div.stButton > button:hover div p {
+        color: #001f3f !important;
     }
-
-    /* Limpieza de etiquetas de Streamlit */
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
     </style>
     """, unsafe_allow_html=True)
 
@@ -81,7 +87,7 @@ st.title("Busca Fácil:")
 
 categoria = st.radio("Seleccioná el sector de búsqueda:", ["Tecno y Vestimenta", "Alimentos"], horizontal=True)
 
-# El input ahora es Gris Topo con letras blancas
+# Input con estilo de "Caja de Enter"
 producto = st.text_input(f"¿Qué {categoria.lower()} buscamos hoy?", placeholder="Escribí aquí...")
 
 if producto:
@@ -91,12 +97,11 @@ if producto:
         if resultado_oferta:
             st.success(f"🔥 **OFERTA DETECTADA:** {resultado_oferta}")
         else:
-            st.info("Sin ofertas relámpago detectadas. Usá los nodos para búsqueda manual.")
+            st.info("Sin ofertas relámpago ahora. Usá los nodos para búsqueda manual.")
 
     st.markdown(f"### Nodos de {categoria}:")
 
     cols = st.columns(4)
-    
     if categoria == "Tecno y Vestimenta":
         nodos = [
             ("Meli 🇦🇷", f"https://lista.mercadolibre.com.ar/{producto.replace(' ', '-')}"),
