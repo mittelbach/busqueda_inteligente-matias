@@ -8,9 +8,23 @@ st.set_page_config(page_title="Busca Fácil", page_icon="🔍", layout="centered
 
 st.markdown("""
     <style>
-    .stApp { background-color: #001f3f !important; }
-    h1 { font-size: 3.5rem !important; color: #ffffff !important; font-weight: 800 !important; }
-    h3 { font-size: 2rem !important; color: #ffffff !important; }
+    /* Fondo Principal */
+    .stApp {
+        background-color: #001f3f !important;
+    }
+    
+    /* LETRAS GRANDES */
+    h1 {
+        font-size: 3.5rem !important;
+        color: #ffffff !important;
+        font-weight: 800 !important;
+    }
+    h3 {
+        font-size: 2rem !important;
+        color: #ffffff !important;
+    }
+    
+    /* BUSCADOR: Gris Topo con LETRAS BLANCAS FUERTES */
     .stTextInput input {
         background-color: #484848 !important;
         color: #ffffff !important;
@@ -19,6 +33,8 @@ st.markdown("""
         border-radius: 10px !important;
         padding: 10px;
     }
+
+    /* BOTONES DE LOS NODOS */
     div.stButton > button {
         width: 100%;
         border-radius: 8px;
@@ -27,14 +43,20 @@ st.markdown("""
         border: 1px solid #00ffa2 !important;
         color: #ffffff !important;
         font-weight: bold !important;
+        font-size: 1.2rem !important;
+    }
+    div.stButton > button:hover {
+        border: 2px solid #ffffff !important;
+        color: #00ffa2 !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
 def buscar_oferta_meli(query):
+    """Función de scraping para detectar 'fiebre' de ofertas relámpago"""
     try:
-        headers = {'User-Agent': 'Mozilla/5.0'}
-        # URL corregida para el scraping interno
+        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}
+        # Usamos la ruta de ofertas para el scraping
         url = f"https://www.mercadolibre.com.ar/ofertas?keywords={query.replace(' ', '%20')}"
         response = requests.get(url, headers=headers, timeout=5)
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -43,54 +65,24 @@ def buscar_oferta_meli(query):
             precio = item.find('span', {'class': 'andes-money-amount__fraction'}).text
             nombre = item.find('p', {'class': 'promotion-item__title'}).text[:35]
             return f"💰 **${precio}** - *{nombre}...*"
+        return None
     except:
         return None
+
+# --- ESTRUCTURA DE LA APP ---
 
 st.title("Busca Fácil 🔍")
 
 categoria = st.radio("Seleccioná el origen del flujo:", ["Tecno y Vestimenta", "Alimentos"], horizontal=True)
 
-producto = st.text_input(f"¿Qué {categoria.lower()} buscamos hoy?", placeholder="Escribí y presioná Enter...")
+# Input principal
+producto = st.text_input(f"¿Qué {categoria.lower()} buscamos hoy?", placeholder="Escribí aquí y presioná Enter...")
 
 if producto:
-    # --- PROTOCOLO DE APERTURA AUTOMÁTICA (Google Shopping) ---
-    target_url = f"https://www.google.com.ar/search?q={producto.replace(' ', '+')}&tbm=shop"
+    # --- 2. PROTOCOLO DE APERTURA AUTOMÁTICA (Google Shopping) ---
+    # Este es el 'reflejo' inmediato que pediste
+    target_url_shopping = f"https://www.google.com.ar/search?q={producto.replace(' ', '+')}&tbm=shop"
     
     components.html(
-        f"""<script>window.open('{target_url}', '_blank');</script>""",
-        height=0,
-    )
-
-    with st.spinner('Cazando ofertas...'):
-        resultado_oferta = buscar_oferta_meli(producto)
-        if resultado_oferta:
-            st.success(f"🔥 **OFERTA DETECTADA:** {resultado_oferta}")
-
-    st.markdown(f"### Nodos de {categoria}:")
-    cols = st.columns(4)
-    
-    # --- CORRECCIÓN CRÍTICA DE URL PARA EVITAR NXDOMAIN ---
-    # Usamos www.mercadolibre.com.ar/search en lugar de lista.mercadolibre
-    query_segura_meli = f"https://www.mercadolibre.com.ar/search?as_word={producto.replace(' ', '%20')}"
-    
-    if categoria == "Tecno y Vestimenta":
-        nodos = [
-            ("Meli 🇦🇷", query_segura_meli),
-            ("Amazon 🌐", f"https://www.amazon.com/s?k={producto}"),
-            ("AliExpress 🇨🇳", f"https://es.aliexpress.com/wholesale?SearchText={producto}"),
-            ("eBay 🇺🇸", f"https://www.ebay.com/sch/i.html?_nkw={producto}")
-        ]
-    else:
-        nodos = [
-            ("Carrefour", f"https://www.carrefour.com.ar/{producto}"),
-            ("Jumbo", f"https://www.jumbo.com.ar/{producto}"),
-            ("Coto", f"https://www.cotodigital3.com.ar/sitios/cdigit/search?searchterm={producto}"),
-            ("Día", f"https://diaonline.supermercaosdia.com.ar/{producto}")
-        ]
-
-    for i, (nombre, link) in enumerate(nodos):
-        with cols[i % 4]:
-            st.link_button(nombre, link)
-
-st.divider()
-st.caption("Busca Fácil - Matías Mittelbach © 2026")
+        f"""
+        <script>
