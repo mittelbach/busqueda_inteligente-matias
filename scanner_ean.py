@@ -1,6 +1,5 @@
-import streamlit as st
+import st_components_html as sc
 import requests
-import streamlit.components.v1 as components
 
 def obtener_nombre_por_ean(ean):
     try:
@@ -15,54 +14,52 @@ def obtener_nombre_por_ean(ean):
     return None
 
 def ejecutar_escaner():
-    # Este bloque incluye un 'allow' explícito para la cámara
-    components.html(
+    # Inyectamos el componente sin session_state
+    sc.html(
         """
-        <div id="scanner-wrapper" style="width: 100%; text-align: center;">
-            <div id="reader" style="width: 100%; border-radius: 10px; border: 2px solid #00ffa2; background: #000;"></div>
-            <button id="start-scan" style="margin-top: 15px; width: 100%; padding: 20px; background: #00ffa2; color: #001f3f; border: none; border-radius: 10px; font-weight: bold; font-size: 16px;">
-                📸 ACTIVAR LENTE TRASERO
+        <div id="wrapper" style="width: 100%; text-align: center; font-family: sans-serif;">
+            <div id="reader" style="width: 100%; border-radius: 10px; border: 2px solid #00ffa2; background: #000; min-height: 250px;"></div>
+            <button id="start-btn" style="margin-top: 20px; width: 100%; padding: 18px; background: #00ffa2; color: #001f3f; border: none; border-radius: 10px; font-weight: bold; font-size: 18px; cursor: pointer;">
+                📸 ACTIVAR ESCÁNER
             </button>
-            <p id="msg" style="color: #00ffa2; margin-top: 10px;">Estado: Esperando permiso de hardware...</p>
+            <p id="status-msg" style="color: #00ffa2; margin-top: 15px; font-size: 14px;">Listo para escanear góndola.</p>
         </div>
 
         <script src="https://unpkg.com/html5-qrcode"></script>
         <script>
-            const btn = document.getElementById('start-scan');
-            const msg = document.getElementById('msg');
+            const startBtn = document.getElementById('start-btn');
+            const statusMsg = document.getElementById('status-msg');
 
-            btn.addEventListener('click', async () => {
-                msg.innerText = "Solicitando permisos al sistema...";
+            startBtn.addEventListener('click', async () => {
+                statusMsg.innerText = "Iniciando hardware...";
+                const html5QrCode = new Html5Qrcode("reader");
                 
-                try {
-                    // Forzamos el pedido de permiso nativo antes de iniciar el scanner
-                    await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-                    
-                    const html5QrCode = new Html5Qrcode("reader");
-                    const config = { 
-                        fps: 20, 
-                        qrbox: { width: 250, height: 150 },
-                        aspectRatio: 1.0 
-                    };
+                const config = { 
+                    fps: 15, 
+                    qrbox: { width: 250, height: 150 },
+                    aspectRatio: 1.0 
+                };
 
+                try {
                     await html5QrCode.start(
                         { facingMode: "environment" }, 
                         config,
                         (decodedText) => {
+                            // Enviar al padre (Streamlit)
                             window.parent.postMessage({type: 'barcode', value: decodedText}, '*');
-                            msg.innerText = "✅ ¡CAPTURADO!";
+                            statusMsg.innerText = "✅ CAPTURADO: " + decodedText;
                             html5QrCode.stop();
-                            btn.style.display = 'block';
+                            startBtn.style.display = 'block';
+                            startBtn.innerText = "ESCANEAR OTRO";
                         }
                     );
-                    btn.style.display = 'none';
+                    startBtn.style.display = 'none';
+                    statusMsg.innerText = "Buscando barras...";
                 } catch (err) {
-                    msg.innerText = "❌ ERROR: " + err.name + " - " + err.message;
-                    console.error(err);
+                    statusMsg.innerText = "❌ Error: Permisos o Hardware";
                 }
             });
         </script>
         """,
         height=450,
-        scrolling=False,
     )
