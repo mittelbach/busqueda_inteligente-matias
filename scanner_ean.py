@@ -15,32 +15,51 @@ def obtener_nombre_por_ean(ean):
     return None
 
 def ejecutar_escaner():
-    # Usamos un ID único para el componente
+    # El secreto está en este bloque: fuerza la cámara trasera ('environment')
     components.html(
         """
-        <div id="reader-wrapper" style="width: 100%; font-family: sans-serif;">
+        <div id="scanner-wrapper" style="width: 100%; text-align: center;">
             <div id="reader" style="width: 100%; border-radius: 10px; border: 2px solid #00ffa2; background: #000;"></div>
-            <p id="status" style="color: #00ffa2; text-align: center; margin-top: 10px;">Cámara lista...</p>
+            <button id="start-scan" style="margin-top: 15px; width: 100%; padding: 20px; background: #00ffa2; color: #001f3f; border: none; border-radius: 10px; font-weight: bold; font-size: 16px;">
+                📸 PULSAR PARA ESCANEAR PRODUCTO
+            </button>
+            <p id="msg" style="color: #00ffa2; margin-top: 10px;">Estado: Esperando acción del usuario...</p>
         </div>
 
         <script src="https://unpkg.com/html5-qrcode"></script>
         <script>
-            const html5QrCode = new Html5Qrcode("reader");
-            const config = { fps: 15, qrbox: { width: 250, height: 150 } };
+            const btn = document.getElementById('start-scan');
+            const msg = document.getElementById('msg');
 
-            html5QrCode.start(
-                { facingMode: "environment" }, 
-                config,
-                (decodedText) => {
-                    // Enviamos el dato a Streamlit y detenemos
-                    window.parent.postMessage({type: 'barcode', value: decodedText}, '*');
-                    document.getElementById('status').innerText = "✅ Detectado: " + decodedText;
-                    html5QrCode.stop();
-                }
-            ).catch(err => {
-                document.getElementById('status').innerText = "❌ Error: " + err;
+            btn.addEventListener('click', () => {
+                msg.innerText = "Iniciando hardware de cámara...";
+                const html5QrCode = new Html5Qrcode("reader");
+                
+                const config = { 
+                    fps: 20, 
+                    qrbox: { width: 280, height: 180 },
+                    aspectRatio: 1.0 
+                };
+
+                // Intentamos abrir la cámara trasera directamente
+                html5QrCode.start(
+                    { facingMode: "environment" }, 
+                    config,
+                    (decodedText) => {
+                        // Enviamos el código al buscador principal
+                        window.parent.postMessage({type: 'barcode', value: decodedText}, '*');
+                        msg.innerText = "✅ ¡CÓDIGO CAPTURADO!";
+                        btn.style.display = 'block';
+                        btn.innerText = "ESCANEAR OTRO";
+                        html5QrCode.stop();
+                    }
+                ).catch(err => {
+                    msg.innerText = "❌ Error: " + err;
+                });
+                
+                btn.style.display = 'none';
             });
         </script>
         """,
-        height=380,
+        height=480,
     )
