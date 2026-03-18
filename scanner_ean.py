@@ -3,22 +3,21 @@ import requests
 import streamlit.components.v1 as components
 
 def obtener_nombre_por_ean(ean):
-    """Traduce el número a un nombre de producto real"""
+    """Traduce el código EAN a nombre de producto usando Open Food Facts"""
     try:
         url = f"https://world.openfoodfacts.org/api/v0/product/{ean}.json"
         response = requests.get(url, timeout=3)
         if response.status_code == 200:
             data = response.json()
             if data.get('status') == 1:
-                return data['product'].get('product_name', 'Producto detectado')
+                return data['product'].get('product_name', None)
     except:
         pass
     return None
 
 def ejecutar_escaner():
-    st.markdown("### 📷 Escáner de Código de Barras")
+    st.markdown("#### 📷 Lector de Góndola")
     
-    # Inyectamos el lector Quagga2
     components.html(
         """
         <div id="interactive" class="viewport"></div>
@@ -31,7 +30,8 @@ def ejecutar_escaner():
                     target: document.querySelector('#interactive'),
                     constraints: { facingMode: "environment" }
                 },
-                decoder: { readers: ["ean_reader"] }
+                decoder: { readers: ["ean_reader"] },
+                locate: true
             }, function(err) {
                 if (err) { console.log(err); return }
                 Quagga.start();
@@ -43,12 +43,11 @@ def ejecutar_escaner():
             });
         </script>
         <style>
-            video { width: 100%; border-radius: 10px; border: 2px solid #00ffa2; }
+            video { width: 100%; border-radius: 12px; border: 2px solid #00ffa2; }
             canvas.drawingBuffer { display: none; }
         </style>
         """,
         height=320,
     )
     
-    ean_input = st.text_input("O pegá el código EAN aquí:", key="ean_manual_scanner")
-    return ean_input
+    return st.text_input("O ingresá el número EAN a mano:", key="manual_ean_scan")
