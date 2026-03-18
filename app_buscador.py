@@ -2,26 +2,26 @@ import streamlit as st
 import scanner_ean 
 import streamlit.components.v1 as components
 
-# --- CONFIGURACIÓN MATÍAS ---
+# --- ESTILO ---
 st.set_page_config(page_title="Find Easy 🔍", page_icon="🔍", layout="centered")
 
 st.markdown("""
     <style>
     .stApp { background-color: #0b1622 !important; }
-    h1 { color: #ffffff !important; text-align: center; }
+    h1 { color: #ffffff !important; text-align: center; font-weight: 800; }
     .stTextInput input { background-color: #1e293b !important; color: white !important; border: 1px solid #00ffa2 !important; }
-    div.stButton > button { background-color: #00ffa2 !important; color: #000 !important; font-weight: bold !important; }
+    div.stButton > button { background-color: #00ffa2 !important; color: #001f3f !important; font-weight: bold !important; border-radius: 10px; }
     </style>
     """, unsafe_allow_html=True)
 
-# SCRIPT QUE ESCUCHA EL ESCÁNER
+# PUENTE DE DATOS
 components.html("""
 <script>
     window.parent.addEventListener('message', function(e) {
         if (e.data.type === 'barcode') {
             const inputs = window.parent.document.querySelectorAll('input');
             for (let input of inputs) {
-                if (input.dataset.testid === "stTextInput" || input.type === "text") {
+                if (input.type === "text") {
                     var setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
                     setter.call(input, e.data.value);
                     input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -35,42 +35,40 @@ components.html("""
 
 st.title("Find Easy 🔍")
 
-if "cam_on" not in st.session_state: st.session_state.cam_on = False
+if "ver_esc" not in st.session_state: st.session_state.ver_esc = False
 
-categoria = st.radio("Seleccioná el origen:", ["Tecno y Vestimenta", "Alimentos"], horizontal=True)
+cat = st.radio("Origen:", ["Tecno y Vestimenta", "Alimentos"], horizontal=True)
 
-if st.button("✨ ABRIR / CERRAR ESCÁNER"):
-    st.session_state.cam_on = not st.session_state.cam_on
+if st.button("✨ ACTIVAR ESCÁNER"):
+    st.session_state.ver_esc = not st.session_state.ver_esc
 
-if st.session_state.cam_on:
+if st.session_state.ver_esc:
     scanner_ean.ejecutar_escaner()
 
-# Donde cae el resultado del escaneo
-producto_input = st.text_input("Buscador", placeholder="779 o nombre...", key="main_search")
+query = st.text_input("Buscador", placeholder="779 o producto...", key="search_main")
 
-if producto_input:
-    nombre_final = producto_input
-    if producto_input.isdigit() and len(producto_input) >= 8:
-        with st.spinner('Identificando...'):
-            traduccion = scanner_ean.obtener_nombre_por_ean(producto_input)
-            if traduccion:
-                st.info(f"📦 Producto: {traduccion}")
-                nombre_final = traduccion
+if query:
+    nombre_final = query
+    if query.isdigit() and len(query) >= 8:
+        with st.spinner('Buscando en base de datos...'):
+            res = scanner_ean.obtener_nombre_por_ean(query)
+            if res:
+                st.info(f"📦 Producto: {res}")
+                nombre_final = res
 
-    st.markdown(f"### Nodos de {categoria}:")
+    st.markdown(f"### Nodos de {cat}:")
     cols = st.columns(4)
-    query = producto_input if producto_input.isdigit() else nombre_final
+    q_final = query if query.isdigit() else nombre_final
     
-    if categoria == "Alimentos":
+    if cat == "Alimentos":
         nodos = [
-            ("Carrefour", f"https://www.carrefour.com.ar/buscar?q={query}"),
-            ("Jumbo", f"https://www.jumbo.com.ar/{query}"),
-            ("La Anónima", f"https://supermercado.laanonima.com.ar/buscar?busqueda={query}"),
+            ("Carrefour", f"https://www.carrefour.com.ar/buscar?q={q_final}"),
+            ("Jumbo", f"https://www.jumbo.com.ar/{q_final}"),
+            ("La Anónima", f"https://supermercado.laanonima.com.ar/buscar?busqueda={q_final}"),
             ("Coto", f"https://www.cotodigital3.com.ar/sitios/cdigit/search?searchterm={nombre_final.replace(' ', '%20')}")
         ]
-        for i, (nombre, link) in enumerate(nodos):
-            with cols[i % 4]:
-                st.link_button(nombre, link)
+        for i, (n, l) in enumerate(nodos):
+            with cols[i % 4]: st.link_button(n, l)
 
 st.divider()
-st.caption("QAP - Radar de Homeostasis | Matías Mittelbach © 2026")
+st.caption("QAP - Matías Mittelbach © 2026")
