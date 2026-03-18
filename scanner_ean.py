@@ -1,5 +1,6 @@
-import st_components_html as sc
+import streamlit as st
 import requests
+import streamlit.components.v1 as components
 
 def obtener_nombre_por_ean(ean):
     try:
@@ -14,15 +15,15 @@ def obtener_nombre_por_ean(ean):
     return None
 
 def ejecutar_escaner():
-    # Inyectamos el componente sin session_state
-    sc.html(
+    # Usamos el componente oficial con un listener de alta velocidad
+    components.html(
         """
         <div id="wrapper" style="width: 100%; text-align: center; font-family: sans-serif;">
             <div id="reader" style="width: 100%; border-radius: 10px; border: 2px solid #00ffa2; background: #000; min-height: 250px;"></div>
             <button id="start-btn" style="margin-top: 20px; width: 100%; padding: 18px; background: #00ffa2; color: #001f3f; border: none; border-radius: 10px; font-weight: bold; font-size: 18px; cursor: pointer;">
-                📸 ACTIVAR ESCÁNER
+                📸 ACTIVAR LENTE DE GÓNDOLA
             </button>
-            <p id="status-msg" style="color: #00ffa2; margin-top: 15px; font-size: 14px;">Listo para escanear góndola.</p>
+            <p id="status-msg" style="color: #00ffa2; margin-top: 15px; font-size: 14px;">QAP - Esperando activación de hardware.</p>
         </div>
 
         <script src="https://unpkg.com/html5-qrcode"></script>
@@ -31,12 +32,12 @@ def ejecutar_escaner():
             const statusMsg = document.getElementById('status-msg');
 
             startBtn.addEventListener('click', async () => {
-                statusMsg.innerText = "Iniciando hardware...";
+                statusMsg.innerText = "Sincronizando con la cámara...";
                 const html5QrCode = new Html5Qrcode("reader");
                 
                 const config = { 
-                    fps: 15, 
-                    qrbox: { width: 250, height: 150 },
+                    fps: 20, 
+                    qrbox: { width: 280, height: 160 },
                     aspectRatio: 1.0 
                 };
 
@@ -45,18 +46,18 @@ def ejecutar_escaner():
                         { facingMode: "environment" }, 
                         config,
                         (decodedText) => {
-                            // Enviar al padre (Streamlit)
+                            // Comunicación directa con el buscador padre
                             window.parent.postMessage({type: 'barcode', value: decodedText}, '*');
-                            statusMsg.innerText = "✅ CAPTURADO: " + decodedText;
+                            statusMsg.innerText = "✅ Detectado: " + decodedText;
                             html5QrCode.stop();
                             startBtn.style.display = 'block';
                             startBtn.innerText = "ESCANEAR OTRO";
                         }
                     );
                     startBtn.style.display = 'none';
-                    statusMsg.innerText = "Buscando barras...";
+                    statusMsg.innerText = "Buscando patrón de barras...";
                 } catch (err) {
-                    statusMsg.innerText = "❌ Error: Permisos o Hardware";
+                    statusMsg.innerText = "❌ Error: Verificá los permisos de cámara en el navegador.";
                 }
             });
         </script>
