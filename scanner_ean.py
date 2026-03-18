@@ -15,49 +15,56 @@ def obtener_nombre_por_ean(ean):
     return None
 
 def ejecutar_escaner():
-    # Usamos el componente oficial con un listener de alta velocidad
+    # Inyectamos el componente que invoca permisos y escanea
     components.html(
         """
-        <div id="wrapper" style="width: 100%; text-align: center; font-family: sans-serif;">
-            <div id="reader" style="width: 100%; border-radius: 10px; border: 2px solid #00ffa2; background: #000; min-height: 250px;"></div>
-            <button id="start-btn" style="margin-top: 20px; width: 100%; padding: 18px; background: #00ffa2; color: #001f3f; border: none; border-radius: 10px; font-weight: bold; font-size: 18px; cursor: pointer;">
-                📸 ACTIVAR LENTE DE GÓNDOLA
+        <div id="scanner-container" style="width: 100%; text-align: center; font-family: sans-serif;">
+            <div id="interactive" style="width: 100%; height: 300px; border: 2px solid #00ffa2; border-radius: 10px; background: #000; overflow: hidden;"></div>
+            <button id="btn-permiso" style="margin-top: 15px; width: 100%; padding: 15px; background: #00ffa2; color: #001f3f; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px;">
+                📸 ACTIVAR ESCÁNER (PEDIR PERMISO)
             </button>
-            <p id="status-msg" style="color: #00ffa2; margin-top: 15px; font-size: 14px;">QAP - Esperando activación de hardware.</p>
+            <p id="feedback" style="color: #00ffa2; margin-top: 10px; font-size: 14px;">Estado: Esperando permiso de hardware...</p>
         </div>
 
         <script src="https://unpkg.com/html5-qrcode"></script>
         <script>
-            const startBtn = document.getElementById('start-btn');
-            const statusMsg = document.getElementById('status-msg');
-
-            startBtn.addEventListener('click', async () => {
-                statusMsg.innerText = "Sincronizando con la cámara...";
-                const html5QrCode = new Html5Qrcode("reader");
+            const btn = document.getElementById('btn-permiso');
+            const feedback = document.getElementById('feedback');
+            
+            btn.addEventListener('click', async () => {
+                feedback.innerText = "Invocando sistema de permisos...";
                 
-                const config = { 
-                    fps: 20, 
-                    qrbox: { width: 280, height: 160 },
-                    aspectRatio: 1.0 
-                };
-
                 try {
+                    // SENTENCIA CLAVE: Invoca el sistema de permisos del celular
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                    // Si llegamos acá, el usuario dio permiso. Frenamos el stream temporal para dárselo al scanner.
+                    stream.getTracks().forEach(track => track.stop()); 
+
+                    const html5QrCode = new Html5Qrcode("interactive");
+                    const config = { 
+                        fps: 20, 
+                        qrbox: { width: 250, height: 150 }, 
+                        aspectRatio: 1.0 
+                    };
+
                     await html5QrCode.start(
                         { facingMode: "environment" }, 
                         config,
                         (decodedText) => {
-                            // Comunicación directa con el buscador padre
+                            // Enviamos el dato al buscador principal
                             window.parent.postMessage({type: 'barcode', value: decodedText}, '*');
-                            statusMsg.innerText = "✅ Detectado: " + decodedText;
+                            feedback.innerText = "✅ Código capturado: " + decodedText;
                             html5QrCode.stop();
-                            startBtn.style.display = 'block';
-                            startBtn.innerText = "ESCANEAR OTRO";
+                            btn.style.display = 'block';
+                            btn.innerText = "ESCANEAR OTRO";
                         }
                     );
-                    startBtn.style.display = 'none';
-                    statusMsg.innerText = "Buscando patrón de barras...";
+                    btn.style.display = 'none';
+                    feedback.innerText = "Escaneando... Apuntá al código de barras.";
+
                 } catch (err) {
-                    statusMsg.innerText = "❌ Error: Verificá los permisos de cámara en el navegador.";
+                    feedback.innerText = "❌ Permiso denegado o error de hardware.";
+                    console.error(err);
                 }
             });
         </script>
