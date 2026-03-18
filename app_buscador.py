@@ -1,58 +1,75 @@
 import streamlit as st
 import scanner_ean 
+import streamlit.components.v1 as components
 
-# --- CONFIGURACIÓN ---
+# --- ESTILO MATÍAS ---
 st.set_page_config(page_title="Busca Fácil 🔍", page_icon="🔍", layout="centered")
 
-# Estilo Neón Matías
 st.markdown("""
     <style>
     .stApp { background-color: #001f3f !important; }
-    h1 { color: #ffffff !important; text-align: center; }
+    h1 { color: #ffffff !important; text-align: center; font-weight: 800; }
     .stTextInput input { background-color: #484848 !important; color: white !important; border: 2px solid #00ffa2 !important; }
+    div.stButton > button { background-color: #484848 !important; color: #001f3f !important; font-weight: bold !important; border-radius: 10px; }
     </style>
     """, unsafe_allow_html=True)
 
+# CAPTURADOR DE MENSAJES (Invisible)
+# Este script atrapa el número que manda la cámara y lo mete en el input
+components.html("""
+<script>
+    window.parent.addEventListener('message', function(e) {
+        if (e.data.type === 'barcode') {
+            const inputs = window.parent.document.querySelectorAll('input');
+            for (let input of inputs) {
+                if (input.placeholder.includes("779")) {
+                    var setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+                    setter.call(input, e.data.value);
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    break;
+                }
+            }
+        }
+    });
+</script>
+""", height=0)
+
 st.title("Busca Fácil 🔍")
 
-# Inicializar el estado si no existe
-if "ver_escaner" not in st.session_state:
-    st.session_state.ver_escaner = False
+if "ver_cam" not in st.session_state: st.session_state.ver_cam = False
 
 categoria = st.radio("Origen del flujo:", ["Tecno y Vestimenta", "Alimentos"], horizontal=True)
 
-# Botón para activar el escáner (Control de Bucle)
-if st.button("✨ ACTIVAR ESCÁNER (CÁMARA)"):
-    st.session_state.ver_escaner = not st.session_state.ver_escaner
+# Botón para mostrar la zona de escaneo
+if st.button("✨ ABRIR ZONA DE ESCANEO"):
+    st.session_state.ver_cam = not st.session_state.ver_cam
 
-# Si el estado es True, mostramos la "Habitación Contigua"
-if st.session_state.ver_escaner:
+if st.session_state.ver_cam:
     scanner_ean.ejecutar_escaner()
 
-# Entrada manual/resultados
-producto_input = st.text_input("Ingresa producto o número EAN:", placeholder="779...")
+# Entrada de producto (aquí caerá el código del escáner)
+producto_input = st.text_input("Buscador EAN / Producto:", placeholder="779 o nombre...")
 
 if producto_input:
     nombre_final = producto_input
     
-    # Si es EAN, traducimos
+    # Si es número, buscamos el nombre real
     if producto_input.isdigit() and len(producto_input) >= 8:
         with st.spinner('Identificando...'):
-            traduccion = scanner_ean.obtener_nombre_por_ean(producto_input)
-            if traduccion:
-                st.success(f"📦 Producto: {traduccion}")
-                nombre_final = traduccion
+            identidad = scanner_ean.obtener_nombre_por_ean(producto_input)
+            if identidad:
+                st.info(f"📦 Producto: {identidad}")
+                nombre_final = identidad
 
-    # Nodos de búsqueda
     st.markdown(f"### Nodos de {categoria}:")
     cols = st.columns(4)
-    query_busqueda = producto_input if producto_input.isdigit() else nombre_final
+    query_super = producto_input if producto_input.isdigit() else nombre_final
     
     if categoria == "Alimentos":
         nodos = [
-            ("Carrefour", f"https://www.carrefour.com.ar/buscar?q={query_busqueda}"),
-            ("Jumbo", f"https://www.jumbo.com.ar/{query_busqueda}"),
-            ("La Anónima", f"https://supermercado.laanonima.com.ar/buscar?busqueda={query_busqueda}"),
+            ("Carrefour", f"https://www.carrefour.com.ar/buscar?q={query_super}"),
+            ("Jumbo", f"https://www.jumbo.com.ar/{query_super}"),
+            ("La Anónima", f"https://supermercado.laanonima.com.ar/buscar?busqueda={query_super}"),
             ("Coto", f"https://www.cotodigital3.com.ar/sitios/cdigit/search?searchterm={nombre_final.replace(' ', '%20')}")
         ]
         for i, (nombre, link) in enumerate(nodos):
