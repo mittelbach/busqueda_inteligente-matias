@@ -15,48 +15,47 @@ def obtener_nombre_por_ean(ean):
     return None
 
 def ejecutar_escaner():
-    # Este bloque usa una inicialización más directa para "despertar" al móvil
+    # El componente ahora es autocontenido para evitar errores de importación
     components.html(
         """
-        <div id="scanner-area" style="width: 100%; text-align: center;">
-            <div id="reader" style="width: 100%; min-height: 280px; border: 2px solid #00ffa2; border-radius: 12px; background: #000;"></div>
-            <button id="start-scan" style="margin-top: 15px; width: 100%; padding: 20px; background: #00ffa2; color: #001f3f; border: none; border-radius: 10px; font-weight: bold; font-size: 16px;">
-                📸 INICIAR LECTOR DE GÓNDOLA
+        <div id="scanner-wrapper" style="width: 100%; text-align: center; font-family: sans-serif;">
+            <div id="reader" style="width: 100%; min-height: 250px; border: 2px solid #00ffa2; border-radius: 10px; background: #000;"></div>
+            <button id="action-btn" style="margin-top: 15px; width: 100%; padding: 18px; background: #00ffa2; color: #001f3f; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer;">
+                📸 ACTIVAR CÁMARA TRASERA
             </button>
-            <p id="msg" style="color: #00ffa2; margin-top: 10px;">QAP: Esperando cámara...</p>
+            <p id="status" style="color: #00ffa2; margin-top: 10px;">Listo para iniciar hardware.</p>
         </div>
 
         <script src="https://unpkg.com/html5-qrcode"></script>
         <script>
-            const btn = document.getElementById('start-scan');
-            const msg = document.getElementById('msg');
+            const btn = document.getElementById('action-btn');
+            const status = document.getElementById('status');
             let html5QrCode;
 
-            btn.addEventListener('click', () => {
-                msg.innerText = "Accediendo al hardware...";
-                
-                // Inicializamos directamente
-                html5QrCode = new Html5Qrcode("reader");
-                
-                const config = { 
-                    fps: 25, 
-                    qrbox: { width: 250, height: 150 },
-                    aspectRatio: 1.0 
-                };
+            btn.addEventListener('click', async () => {
+                status.innerText = "Sincronizando permisos...";
+                try {
+                    // Pedimos permiso al sistema operativo del celular
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                    stream.getTracks().forEach(track => track.stop());
 
-                // Forzamos la cámara trasera ('environment') directamente
-                html5QrCode.start(
-                    { facingMode: "environment" }, 
-                    config,
-                    (decodedText) => {
-                        window.parent.postMessage({type: 'barcode', value: decodedText}, '*');
-                        msg.innerText = "✅ ¡CAPTURADO!";
-                        html5QrCode.stop();
-                    }
-                ).catch(err => {
-                    msg.innerText = "❌ ERROR: Revisa los permisos de cámara de tu navegador.";
-                    console.error(err);
-                });
+                    html5QrCode = new Html5Qrcode("reader");
+                    const config = { fps: 20, qrbox: { width: 250, height: 150 }, aspectRatio: 1.0 };
+
+                    await html5QrCode.start(
+                        { facingMode: "environment" }, 
+                        config,
+                        (decodedText) => {
+                            window.parent.postMessage({type: 'barcode', value: decodedText}, '*');
+                            status.innerText = "✅ CAPTURADO: " + decodedText;
+                            html5QrCode.stop();
+                        }
+                    );
+                    btn.style.display = 'none';
+                    status.innerText = "Buscando código de barras...";
+                } catch (err) {
+                    status.innerText = "❌ ERROR: Permití la cámara en los ajustes del navegador.";
+                }
             });
         </script>
         """,
