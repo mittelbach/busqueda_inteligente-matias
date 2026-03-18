@@ -2,22 +2,21 @@ import streamlit as st
 import requests
 from bs4 import BeautifulSoup
 import streamlit.components.v1 as components
+import scanner_ean  # Importa tu nuevo archivo
 
-# --- 1. CONFIGURACIÓN VISUAL ---
-st.set_page_config(page_title="Busca Fácil", page_icon="🔍", layout="centered")
+# --- CONFIGURACIÓN VISUAL ---
+st.set_page_config(page_title="Busca Fácil 🔍", page_icon="🔍", layout="centered")
 
 st.markdown("""
     <style>
     .stApp { background-color: #001f3f !important; }
     h1 { font-size: 3.5rem !important; color: #ffffff !important; font-weight: 800 !important; }
-    h3 { font-size: 2rem !important; color: #ffffff !important; }
     .stTextInput input {
         background-color: #484848 !important;
         color: #ffffff !important;
         font-size: 1.5rem !important;
         border: 2px solid #00ffa2 !important;
         border-radius: 10px !important;
-        padding: 10px;
     }
     div.stButton > button {
         width: 100%;
@@ -27,7 +26,13 @@ st.markdown("""
         border: 1px solid #00ffa2 !important;
         color: #ffffff !important;
         font-weight: bold !important;
-        font-size: 1.2rem !important;
+    }
+    .ean-card {
+        background: rgba(0, 255, 162, 0.1);
+        border: 1px solid #00ffa2;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -52,46 +57,53 @@ st.title("Busca Fácil 🔍")
 
 categoria = st.radio("Seleccioná el origen del flujo:", ["Tecno y Vestimenta", "Alimentos"], horizontal=True)
 
-producto = st.text_input(f"¿Qué {categoria.lower()} buscamos hoy?", placeholder="Escribí y presioná Enter...")
+# Sección de Escáner en "Habitación Contigua"
+with st.expander("✨ USAR ESCÁNER EAN (BETA)"):
+    ean_detectado = scanner_ean.ejecutar_escaner()
 
-if producto:
-    # --- PROTOCOLO DE APERTURA AUTOMÁTICA (Google Shopping) ---
-    target_url = f"https://www.google.com.ar/search?q={producto.replace(' ', '+')}&tbm=shop"
+# Entrada de búsqueda
+manual_input = st.text_input(f"¿Qué {categoria.lower()} buscamos hoy?", placeholder="Escribí o escaneá un producto...")
+
+# Lógica de decisión de búsqueda
+query_final = ean_detectado if ean_detectado else manual_input
+
+if query_final:
+    nombre_para_nodos = query_final
     
-    # Corregido: Cierre de comillas para evitar el SyntaxError detectado
-    components.html(
-        f"""
-        <script>
-            window.open('{target_url}', '_blank');
-        </script>
-        """,
-        height=0,
-    )
+    # Si es un código numérico, intentamos identificar el producto
+    if query_final.isdigit() and len(query_final) >= 8:
+        with st.spinner('Identificando producto...'):
+            traduccion = scanner_ean.obtener_nombre_por_ean(query_final)
+            if traduccion:
+                st.markdown(f"<div class='ean-card'>📦 **Producto:** {traduccion}</div>", unsafe_allow_html=True)
+                nombre_para_nodos = traduccion
+
+    # Apertura automática Google Shopping
+    target_url = f"https://www.google.com.ar/search?q={nombre_para_nodos.replace(' ', '+')}&tbm=shop"
+    components.html(f"<script>window.open('{target_url}', '_blank');</script>", height=0)
 
     with st.spinner('Cazando ofertas...'):
-        resultado_oferta = buscar_oferta_meli(producto)
+        resultado_oferta = buscar_oferta_meli(nombre_para_nodos)
         if resultado_oferta:
             st.success(f"🔥 **OFERTA DETECTADA:** {resultado_oferta}")
 
     st.markdown(f"### Nodos de {categoria}:")
     cols = st.columns(4)
     
-    # URL Maestra para evitar errores de página inexistente en Meli
-    query_meli = f"https://www.mercadolibre.com.ar/jm/search?as_word={producto.replace(' ', '%20')}"
-    
     if categoria == "Tecno y Vestimenta":
         nodos = [
-            ("Meli 🇦🇷", query_meli),
-            ("Amazon 🌐", f"https://www.amazon.com/s?k={producto.replace(' ', '+')}"),
-            ("AliExpress 🇨🇳", f"https://es.aliexpress.com/wholesale?SearchText={producto.replace(' ', '+')}"),
-            ("eBay 🇺🇸", f"https://www.ebay.com/sch/i.html?_nkw={producto.replace(' ', '+')}")
+            ("Meli 🇦🇷", f"https://www.mercadolibre.com.ar/jm/search?as_word={nombre_para_nodos.replace(' ', '%20')}"),
+            ("Amazon 🌐", f"https://www.amazon.com/s?k={nombre_para_nodos.replace(' ', '+')}"),
+            ("AliExpress 🇨🇳", f"https://es.aliexpress.com/wholesale?SearchText={nombre_para_nodos.replace(' ', '+')}"),
+            ("eBay 🇺🇸", f"https://www.ebay.com/sch/i.html?_nkw={nombre_para_nodos.replace(' ', '+')}")
         ]
     else:
+        # Aquí están los supermercados que pediste con búsqueda por EAN/Nombre
         nodos = [
-            ("Carrefour", f"https://www.carrefour.com.ar/{producto.replace(' ', '%20')}"),
-            ("Jumbo", f"https://www.jumbo.com.ar/{producto.replace(' ', '%20')}"),
-            ("Coto", f"https://www.cotodigital3.com.ar/sitios/cdigit/search?searchterm={producto.replace(' ', '%20')}"),
-            ("Día", f"https://diaonline.supermercaosdia.com.ar/{producto.replace(' ', '%20')}")
+            ("Carrefour", f"https://www.carrefour.com.ar/buscar?q={query_final}"),
+            ("Jumbo", f"https://www.jumbo.com.ar/{query_final}"),
+            ("La Anónima", f"https://supermercado.laanonima.com.ar/buscar?busqueda={query_final}"),
+            ("Coto", f"https://www.cotodigital3.com.ar/sitios/cdigit/search?searchterm={nombre_para_nodos.replace(' ', '%20')}")
         ]
 
     for i, (nombre, link) in enumerate(nodos):
