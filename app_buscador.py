@@ -1,28 +1,31 @@
 import streamlit as st
-from streamlit_camera_input_live import camera_input_live
 
-st.set_page_config(page_title="Easy Find - Radar", layout="centered")
+st.set_page_config(page_title="Find Easy - Radar", layout="centered")
 
-st.title("🔍 Easy Find: Radar")
+st.title("🔍 Find Easy: Radar")
 
-st.write("### Escaneá el código de barras")
-# Este componente es el que mejor funciona en Android/iOS
-image = camera_input_live()
+st.write("### Escaneá el producto")
+# Componente nativo: el más estable para celulares
+foto_producto = st.camera_input("Apuntá al código de barras")
 
-if image:
-    st.image(image, caption="Buscando código...", width=300)
-    st.info("💡 En la versión final, aquí el AHG procesará la imagen automáticamente.")
+if foto_producto:
+    # Aquí es donde el AHG entraría a procesar la imagen
+    st.success("✅ Imagen capturada con éxito.")
     
-    # Por ahora, para que puedas probar la búsqueda:
-    manual_code = st.text_input("Confirmá el número del código:")
+    # Simulación de detección para que el radar funcione ya mismo
+    ean_manual = st.text_input("Confirmá el número del código (EAN):")
     
-    if manual_code:
-        st.success(f"✅ ¡Capturado!: {manual_code}")
+    if ean_manual:
+        st.divider()
+        st.write(f"### 🛡️ Resultados para: {ean_manual}")
+        
         col1, col2 = st.columns(2)
         with col1:
-            st.link_button("🔍 Google", f"https://www.google.com/search?q={manual_code}")
+            url_google = f"https://www.google.com/search?q={ean_manual}"
+            st.link_button("🔍 Buscar en Google", url_google, use_container_width=True)
         with col2:
-            st.link_button("🛍️ M. Libre", f"https://listado.mercadolibre.com.ar/{manual_code}")
+            url_ml = f"https://listado.mercadolibre.com.ar/{ean_manual}"
+            st.link_button("🛍️ Mercado Libre", url_ml, use_container_width=True)
 
 st.divider()
-st.caption("QAP - Modo Mobile Activo")
+st.caption("QAP - Protocolo Homeostasis Global v1.2")
