@@ -1,2 +1,3 @@
-streamlit
+streamlitstreamlit
+streamlit-qrcode-scanner
 
