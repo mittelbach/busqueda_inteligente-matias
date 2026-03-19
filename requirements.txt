@@ -1,3 +1,4 @@
 streamlit
-streamlit-qrcode-scanner
-
+pyzbar
+Pillow
+numpy
