@@ -1,77 +1,55 @@
 import streamlit as st
-import scanner_ean 
 import streamlit.components.v1 as components
 
-# --- ESTILO MATÍAS ---
-st.set_page_config(page_title="Busca Fácil 🔍", page_icon="🔍", layout="centered")
+# Configuración de página estilo "Maserati" (Limpio y veloz)
+st.set_page_config(page_title="Easy Find - Radar", layout="centered")
 
-st.markdown("""
-    <style>
-    .stApp { background-color: #001f3f !important; }
-    h1 { color: #ffffff !important; text-align: center; }
-    .stTextInput input { background-color: #262730 !important; color: white !important; border: 1px solid #00ffa2 !important; }
-    div.stButton > button { background-color: #00ffa2 !important; color: #001f3f !important; font-weight: bold !important; border-radius: 10px; }
-    </style>
-    """, unsafe_allow_html=True)
+st.title("🔍 Easy Find: Radar de Precios")
+st.write("Escanea un producto para iniciar la búsqueda neguentrópica.")
 
-# ESCUCHA DEL ESCÁNER (Inyecta el número en el buscador)
-components.html("""
+# --- COMPONENTE DEL ESCÁNER (JavaScript + HTML5) ---
+# Este bloque invoca la cámara nativa del navegador
+scanner_code = """
+<div id="reader" style="width: 100%;"></div>
+<script src="https://unpkg.com/html5-qrcode"></script>
 <script>
-    window.parent.addEventListener('message', function(e) {
-        if (e.data.type === 'barcode') {
-            const inputs = window.parent.document.querySelectorAll('input');
-            for (let input of inputs) {
-                if (input.type === "text") {
-                    var setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
-                    setter.call(input, e.data.value);
-                    input.dispatchEvent(new Event('input', { bubbles: true }));
-                    break;
-                }
-            }
-        }
-    });
+    function onScanSuccess(decodedText, decodedResult) {
+        // Enviamos el código detectado a Streamlit
+        window.parent.postMessage({
+            type: 'streamlit:setComponentValue',
+            value: decodedText
+        }, '*');
+        // Detenemos el escáner tras el éxito
+        html5QrcodeScanner.clear();
+    }
+
+    let html5QrcodeScanner = new Html5QrcodeScanner(
+        "reader", { fps: 10, qrbox: 250 });
+    html5QrcodeScanner.render(onScanSuccess);
 </script>
-""", height=0)
+"""
 
-st.title("Busca Fácil 🔍")
+# Renderizamos el escáner en la app
+resultado_escaneo = components.html(scanner_code, height=450)
 
-# Control de estado seguro
-if "scan_visible" not in st.session_state: st.session_state.scan_visible = False
+# --- LÓGICA DE BÚSQUEDA ---
+# Si detecta un código, lo pone en el buscador automáticamente
+barcode = st.text_input("Código detectado / Ingresar manualmente:", value=resultado_escaneo if resultado_escaneo else "")
 
-categoria = st.radio("Origen del flujo:", ["Tecno y Vestimenta", "Alimentos"], horizontal=True)
-
-if st.button("✨ ABRIR / CERRAR ZONA DE ESCANEO"):
-    st.session_state.scan_visible = not st.session_state.scan_visible
-
-if st.session_state.scan_visible:
-    scanner_ean.ejecutar_escaner()
-
-# Buscador Principal
-producto_input = st.text_input("Buscador", placeholder="779 o nombre del producto...", key="main_search_key")
-
-if producto_input:
-    nombre_final = producto_input
-    if producto_input.isdigit() and len(producto_input) >= 8:
-        with st.spinner('Identificando...'):
-            identidad = scanner_ean.obtener_nombre_por_ean(producto_input)
-            if identidad:
-                st.info(f"📦 Producto: {identidad}")
-                nombre_final = identidad
-
-    st.markdown(f"### Nodos de {categoria}:")
-    cols = st.columns(4)
-    query_str = producto_input if producto_input.isdigit() else nombre_final
+if barcode:
+    st.success(f"Producto detectado: {barcode}")
     
-    if categoria == "Alimentos":
-        nodos = [
-            ("Carrefour", f"https://www.carrefour.com.ar/buscar?q={query_str}"),
-            ("Jumbo", f"https://www.jumbo.com.ar/{query_str}"),
-            ("La Anónima", f"https://supermercado.laanonima.com.ar/buscar?busqueda={query_str}"),
-            ("Coto", f"https://www.cotodigital3.com.ar/sitios/cdigit/search?searchterm={nombre_final.replace(' ', '%20')}")
-        ]
-        for i, (nombre, link) in enumerate(nodos):
-            with cols[i % 4]:
-                st.link_button(nombre, link)
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if st.button("Buscar en Google"):
+            st.write(f"Buscando {barcode}...")
+            # Aquí irá tu lógica de scraping del AHG
+            
+    with col2:
+        st.button("Ver en Mercado Libre")
+        
+    with col3:
+        st.button("Historial de Precios")
 
-st.divider()
-st.caption("QAP - Radar de Homeostasis | Matías Mittelbach © 2026")
+st.info("QAP: Sistema listo para escaneo desde Motorola G9 / Laptop.")
