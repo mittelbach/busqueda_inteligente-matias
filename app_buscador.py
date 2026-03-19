@@ -1,23 +1,49 @@
 import streamlit as st
-from streamlit_qrcode_scanner import qrcode_scanner
+import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Easy Find - Radar", layout="centered")
 
-st.title("🔍 Easy Find: Radar de Precios")
+st.title("🔍 Easy Find: Radar")
 
-# Instrucción clara para el usuario
-st.warning("⚠️ Si no ves la cámara, asegúrate de dar 'Permitir' en la ventana emergente del navegador.")
+# El secreto: Un componente HTML puro que invoca la cámara nativa del móvil
+st.markdown("### Escaneá el código de barras")
 
-# El escáner con un pequeño retraso para asegurar carga de hardware
-codigo_detectado = qrcode_scanner(key='scanner')
+scanner_html = """
+<div id="interactive" class="viewport"></div>
+<script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/quagga.min.js"></script>
+<script>
+    Quagga.init({
+        inputStream: {
+            name: "Live",
+            type: "LiveStream",
+            target: document.querySelector('#interactive'),
+            constraints: { facingMode: "environment" } // FUERZA CÁMARA TRASERA
+        },
+        decoder: { readers: ["ean_reader"] }
+    }, function(err) {
+        if (err) { console.log(err); return }
+        Quagga.start();
+    });
 
-if codigo_detectado:
-    st.success(f"📦 Producto: {codigo_detectado}")
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        st.link_button("🔍 Google", f"https://www.google.com/search?q={codigo_detectado}")
-    with col2:
-        st.link_button("🛍️ M. Libre", f"https://listado.mercadolibre.com.ar/{codigo_detectado}")
+    Quagga.onDetected(function(result) {
+        var code = result.codeResult.code;
+        window.parent.postMessage({
+            type: 'streamlit:setComponentValue',
+            value: code
+        }, '*');
+    });
+</script>
+<style>
+    canvas.drawingBuffer { display: none; }
+    video { width: 100% !important; border-radius: 10px; }
+</style>
+"""
+
+# Capturamos el dato del escaneo
+dato_barcode = components.html(scanner_html, height=300)
+
+if dato_barcode:
+    st.success(f"✅ ¡Capturado!: {dato_barcode}")
+    st.link_button(f"🔍 Ver Precios de {dato_barcode}", f"https://www.google.com/search?q={dato_barcode}")
 else:
-    st.info("A la espera de un código... Apuntá la cámara al código de barras.")
+    st.info("Apuntá al código de barras. El sistema detectará el número automáticamente.")
