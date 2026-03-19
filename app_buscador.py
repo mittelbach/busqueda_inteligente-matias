@@ -1,69 +1,36 @@
 import streamlit as st
-import streamlit.components.v1 as components
+from streamlit_qrcode_scanner import qrcode_scanner
 
 # Configuración Maserati
 st.set_page_config(page_title="Easy Find - Radar", layout="centered")
 
 st.title("🔍 Easy Find: Radar de Precios")
+st.write("Escaneá el código de barras con la cámara de tu Motorola o Laptop.")
 
-# Inicializar el código de barras en la memoria de la sesión si no existe
-if 'barcode_scan' not in st.session_state:
-    st.session_state['barcode_scan'] = ""
+# --- EL ESCÁNER (La pieza clave) ---
+# Esto abre la cámara y nos da el número directamente
+codigo_detectado = qrcode_scanner(key='scanner')
 
-# --- COMPONENTE DEL ESCÁNER ---
-st.write("### 1. Escanear Producto")
-
-# Este script es el que hace la magia sin instalaciones
-scanner_html = """
-<div id="reader" style="width: 100%;"></div>
-<script src="https://unpkg.com/html5-qrcode"></script>
-<script>
-    const html5QrCode = new Html5Qrcode("reader");
-    const qrCodeSuccessCallback = (decodedText, decodedResult) => {
-        // Enviar resultado a Streamlit
-        window.parent.postMessage({
-            type: 'streamlit:setComponentValue',
-            value: decodedText
-        }, '*');
-        html5QrCode.stop();
-    };
-    const config = { fps: 10, qrbox: { width: 250, height: 150 } };
-
-    // Iniciar cámara trasera automáticamente
-    html5QrCode.start({ facingMode: "environment" }, config, qrCodeSuccessCallback);
-</script>
-"""
-
-# Renderizamos el escáner y capturamos el valor
-# Usamos un key para que Streamlit sepa qué estamos escuchando
-scan_value = components.html(scanner_html, height=350)
-
-# Actualizar el estado si el componente devuelve algo
-if scan_value:
-    st.session_state['barcode_scan'] = scan_value
-
-# --- BUSCADOR ---
-st.write("### 2. Resultado del Radar")
-barcode = st.text_input("Código EAN detectado:", value=st.session_state['barcode_scan'], key="input_ean")
-
-if barcode:
-    st.success(f"📦 Producto identificado: {barcode}")
+# --- LÓGICA DE RESULTADOS ---
+if codigo_detectado:
+    st.success(f"📦 Producto Identificado: {codigo_detectado}")
     
-    col1, col2, col3 = st.columns(3)
+    # Creamos los botones de búsqueda neguentrópica
+    col1, col2 = st.columns(2)
     
     with col1:
-        # Enlace directo a Google para que el usuario vea precios ya mismo
-        link_google = f"https://www.google.com/search?q={barcode}"
-        st.markdown(f"[![Google](https://img.shields.io/badge/Buscar-Google-blue)]({link_google})")
-            
-    with col2:
-        link_ml = f"https://listado.mercadolibre.com.ar/{barcode}"
-        st.markdown(f"[![ML](https://img.shields.io/badge/Ver-MercadoLibre-yellow)]({link_ml})")
+        url_google = f"https://www.google.com/search?q={codigo_detectado}"
+        st.link_button("🔍 Buscar en Google", url_google, use_container_width=True)
         
-    with col3:
-        if st.button("Limpiar Radar"):
-            st.session_state['barcode_scan'] = ""
-            st.rerun()
+    with col2:
+        url_ml = f"https://listado.mercadolibre.com.ar/{codigo_detectado}"
+        st.link_button("🛍️ Ver en Mercado Libre", url_ml, use_container_width=True)
+
+    # Espacio para tu algoritmo AHG
+    st.info("💡 Consejo: Compará el precio con el historial para evitar la entropía inflacionaria.")
+
+else:
+    st.info("A la espera de un código... Apuntá la cámara al código de barras.")
 
 st.divider()
-st.info("QAP: Escaneando directamente desde el navegador (Motorola G9 / PC).")
+st.caption("QAP - Sistema Easy Find v1.0 | Protocolo AHG")
