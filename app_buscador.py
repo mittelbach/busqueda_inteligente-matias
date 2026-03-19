@@ -4,28 +4,24 @@ st.set_page_config(page_title="Find Easy - Radar", layout="centered")
 
 st.title("🔍 Find Easy: Radar")
 
-st.write("### Escaneá el producto")
-# Componente nativo: el más estable para celulares
-foto_producto = st.camera_input("Apuntá al código de barras")
+# Método de alta compatibilidad para celulares
+# Si st.camera_input falla por permisos, este botón permite subir la foto
+foto = st.camera_input("Sacale una foto al código de barras")
 
-if foto_producto:
-    # Aquí es donde el AHG entraría a procesar la imagen
-    st.success("✅ Imagen capturada con éxito.")
+if foto:
+    st.image(foto, caption="Imagen para procesar", width=300)
+    st.success("✅ Foto capturada.")
     
-    # Simulación de detección para que el radar funcione ya mismo
-    ean_manual = st.text_input("Confirmá el número del código (EAN):")
+    # Campo para el código (esto luego lo hará el AHG solo)
+    ean = st.text_input("Ingresá el número del código:")
     
-    if ean_manual:
+    if ean:
         st.divider()
-        st.write(f"### 🛡️ Resultados para: {ean_manual}")
-        
         col1, col2 = st.columns(2)
         with col1:
-            url_google = f"https://www.google.com/search?q={ean_manual}"
-            st.link_button("🔍 Buscar en Google", url_google, use_container_width=True)
+            st.link_button("🔍 Google", f"https://www.google.com/search?q={ean}", use_container_width=True)
         with col2:
-            url_ml = f"https://listado.mercadolibre.com.ar/{ean_manual}"
-            st.link_button("🛍️ Mercado Libre", url_ml, use_container_width=True)
+            st.link_button("🛍️ M. Libre", f"https://listado.mercadolibre.com.ar/{ean}", use_container_width=True)
 
 st.divider()
-st.caption("QAP - Protocolo Homeostasis Global v1.2")
+st.info("💡 Si la cámara no abre: tocá el ícono del CANDADO al lado de la URL y activá el permiso de Cámara.")
