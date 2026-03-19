@@ -3,7 +3,6 @@ import requests
 import streamlit.components.v1 as components
 
 def obtener_nombre_por_ean(ean):
-    """Consulta Open Food Facts con manejo de errores limpio."""
     try:
         url = f"https://world.openfoodfacts.org/api/v0/product/{str(ean).strip()}.json"
         response = requests.get(url, timeout=3)
@@ -16,63 +15,55 @@ def obtener_nombre_por_ean(ean):
     return None
 
 def ejecutar_escaner():
-    """Inyecta el escáner con prioridad en códigos de barras EAN-13."""
-    components.html(
-        """
-        <div id="scanner-wrapper" style="width: 100%; text-align: center; font-family: sans-serif;">
-            <div id="reader" style="width: 100%; min-height: 300px; border: 3px solid #00ffa2; border-radius: 12px; background: #000; position: relative;"></div>
-            <button id="start-btn" style="margin-top: 15px; width: 100%; padding: 20px; background: #00ffa2; color: #001f3f; border: none; border-radius: 10px; font-weight: bold; font-size: 18px; cursor: pointer; box-shadow: 0px 4px 15px rgba(0, 255, 162, 0.3);">
-                📸 ACTIVAR RADAR DE BARRAS
-            </button>
-            <p id="msg" style="color: #00ffa2; margin-top: 12px; font-weight: bold;">Estado: Listo para escanear.</p>
+    componente_html = """
+    <div id="scanner-container" style="width: 100%; font-family: sans-serif; text-align: center;">
+        <div id="reader" style="width: 100%; border: 4px solid #555; border-radius: 15px; background: #000; transition: border 0.3s;"></div>
+        <div id="feedback" style="margin-top: 15px; padding: 15px; border-radius: 10px; background: #262730; color: #00ffa2; font-weight: bold; font-size: 1.2rem;">
+            🔍 APUNTE AL CÓDIGO DE BARRAS
         </div>
+        <audio id="beep" src="https://www.soundjay.com/buttons/beep-07a.mp3" preload="auto"></audio>
+    </div>
 
-        <script src="https://unpkg.com/html5-qrcode"></script>
-        <script>
-            const btn = document.getElementById('start-btn');
-            const msg = document.getElementById('msg');
-            let scannerActive = false;
-            let html5QrCode;
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script>
+        const feedback = document.getElementById('feedback');
+        const readerDiv = document.getElementById('reader');
+        const beep = document.getElementById('beep');
 
-            btn.addEventListener('click', () => {
-                if (scannerActive) return;
-                
-                msg.innerText = "📡 Buscando señal de cámara...";
-                html5QrCode = new Html5Qrcode("reader");
-                
-                const config = { 
-                    fps: 20, 
-                    qrbox: { width: 280, height: 160 }, // Ajustado para códigos de barras alargados
-                    aspectRatio: 1.0,
-                    // FORZAMOS FORMATOS DE BARRAS PARA MAYOR VELOCIDAD
-                    formatsToSupport: [ 0, 1, 6 ] // EAN_13, EAN_8, CODE_128
-                };
+        function onScanSuccess(decodedText) {
+            // 1. Feedback Visual: Borde Verde y Mensaje
+            readerDiv.style.border = "6px solid #00ffa2";
+            feedback.innerText = "✅ DETECTADO: " + decodedText;
+            feedback.style.background = "#00ffa2";
+            feedback.style.color = "#001f3f";
+            
+            // 2. Feedback Sonoro
+            beep.play();
 
-                html5QrCode.start(
-                    { facingMode: "environment" }, 
-                    config,
-                    (decodedText) => {
-                        // Enviamos el dato a app_buscador.py
-                        window.parent.postMessage({type: 'barcode', value: decodedText}, '*');
-                        msg.innerText = "✅ DETECTADO: " + decodedText;
-                        
-                        // Vibración corta si el dispositivo lo permite
-                        if (navigator.vibrate) navigator.vibrate(100);
-                        
-                        // Detener tras detección para ahorrar recursos
-                        html5QrCode.stop().then(() => {
-                            scannerActive = false;
-                        }).catch(err => console.error("Error al detener:", err));
-                    }
-                ).then(() => {
-                    scannerActive = true;
-                    msg.innerText = "🔎 Apunte al código de barras";
-                }).catch(err => {
-                    msg.innerText = "❌ ERROR: " + err;
-                    console.error(err);
-                });
-            });
-        </script>
-        """,
-        height=480,
-    )
+            // 3. Feedback Háptico (Celular)
+            if (navigator.vibrate) navigator.vibrate(200);
+
+            // 4. Envío de datos a Streamlit
+            window.parent.postMessage({type: 'barcode', value: decodedText}, '*');
+            
+            // 5. Pausa y reinicio limpio
+            html5QrcodeScanner.clear();
+            setTimeout(() => {
+                location.reload(); // Recarga el componente para estar listo de nuevo
+            }, 2000);
+        }
+
+        let html5QrcodeScanner = new Html5QrcodeScanner(
+            "reader", 
+            { 
+                fps: 25, 
+                qrbox: {width: 300, height: 180},
+                aspectRatio: 1.33,
+                formatsToSupport: [ 0, 1, 6 ] // EAN_13, EAN_8, CODE_128
+            }
+        );
+        
+        html5QrcodeScanner.render(onScanSuccess);
+    </script>
+    """
+    components.html(componente_html, height=550)
