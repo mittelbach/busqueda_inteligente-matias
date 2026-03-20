@@ -3,6 +3,22 @@ import urllib.parse
 
 # Configuración de Nodo - Laprida
 st.set_page_config(page_title="Easy Find - Sensor de Plaza V3", layout="centered")
+
+# BLOQUE DE COLOR: Gris oscuro forzado para los radares
+st.markdown("""
+<style>
+    .radar-diseno {
+        display: block;
+        padding: 12px;
+        border-radius: 8px;
+        text-align: center;
+        font-weight: bold;
+        text-decoration: none !important;
+        color: #333333 !important; /* Gris oscuro */
+    }
+</style>
+""", unsafe_allow_html=True)
+
 st.title("🔍 Easy Find: Sensor de Plaza")
 st.caption("Protocolo SHA - Relevamiento de Homeostasis Social")
 
@@ -18,16 +34,15 @@ if ean_input:
     
     col1, col2 = st.columns(2)
     
-    # TEXTO EN GRIS OSCURO (#333333) PARA MEJOR LEGIBILIDAD
     with col1:
         # Radar 1: Open Food Facts
         url_off = f"https://ar.openfoodfacts.org/producto/{ean_limpio}"
-        st.markdown(f'''<a href="{url_off}" target="_blank" style="text-decoration:none;"><div style="background-color: #FF8C00; color: #333333; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold;">🍎 Radar OpenFood</div></a>''', unsafe_allow_html=True)
+        st.markdown(f'''<a href="{url_off}" target="_blank" class="radar-diseno" style="background-color: #FF8C00;">🍎 Radar OpenFood</a>''', unsafe_allow_html=True)
     
     with col2:
         # Radar 2: Google Búsqueda Exacta
         url_google = f"https://www.google.com.ar/search?q=%22{ean_limpio}%22"
-        st.markdown(f'''<a href="{url_google}" target="_blank" style="text-decoration:none;"><div style="background-color: #4285F4; color: #333333; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold;">🔎 Radar Google</div></a>''', unsafe_allow_html=True)
+        st.markdown(f'''<a href="{url_google}" target="_blank" class="radar-diseno" style="background-color: #4285F4;">🔎 Radar Google</a>''', unsafe_allow_html=True)
 
     st.divider()
 
