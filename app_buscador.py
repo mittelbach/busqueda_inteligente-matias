@@ -18,15 +18,16 @@ if ean_input:
     
     col1, col2 = st.columns(2)
     
+    # TEXTO EN GRIS OSCURO (#333333) PARA MEJOR LEGIBILIDAD
     with col1:
-        # Radar 1: Open Food Facts (Alimentos/Bebidas)
+        # Radar 1: Open Food Facts
         url_off = f"https://ar.openfoodfacts.org/producto/{ean_limpio}"
-        st.markdown(f'''<a href="{url_off}" target="_blank" style="text-decoration:none;"><div style="background-color: #FF8C00; color: white; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold;">🍎 Radar OpenFood</div></a>''', unsafe_allow_html=True)
+        st.markdown(f'''<a href="{url_off}" target="_blank" style="text-decoration:none;"><div style="background-color: #FF8C00; color: #333333; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold;">🍎 Radar OpenFood</div></a>''', unsafe_allow_html=True)
     
     with col2:
-        # Radar 2: Google Búsqueda Exacta (Ferretería/Perfumería/Repuestos)
+        # Radar 2: Google Búsqueda Exacta
         url_google = f"https://www.google.com.ar/search?q=%22{ean_limpio}%22"
-        st.markdown(f'''<a href="{url_google}" target="_blank" style="text-decoration:none;"><div style="background-color: #4285F4; color: white; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold;">🔎 Radar Google</div></a>''', unsafe_allow_html=True)
+        st.markdown(f'''<a href="{url_google}" target="_blank" style="text-decoration:none;"><div style="background-color: #4285F4; color: #333333; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold;">🔎 Radar Google</div></a>''', unsafe_allow_html=True)
 
     st.divider()
 
